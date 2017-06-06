@@ -1,6 +1,10 @@
+// ---------------------------------------------------------------------
 //
-// Created by eldar on 6/4/17.
+// Copyright (C) 2016 - 2017 Ilona Ambartsumya, Eldar Khattatov
 //
+// This file is part of peFLOW.
+//
+// ---------------------------------------------------------------------
 
 #include <deal.II/base/multithread_info.h>
 #include "../inc/darcy_mfe.h"

@@ -1,6 +1,10 @@
+// ---------------------------------------------------------------------
 //
-// Created by eldar on 6/4/17.
+// Copyright (C) 2016 - 2017 Ilona Ambartsumyan, Eldar Khattatov
 //
+// This file is part of peFLOW.
+//
+// ---------------------------------------------------------------------
 
 #ifndef PEFLOW_DARCY_MFE_H
 #define PEFLOW_DARCY_MFE_H

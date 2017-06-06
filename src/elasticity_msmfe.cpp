@@ -1,6 +1,10 @@
+// ---------------------------------------------------------------------
 //
-// Created by eldar on 6/4/17.
+// Copyright (C) 2016 - 2017 Eldar Khattatov
 //
+// This file is part of peFLOW.
+//
+// ---------------------------------------------------------------------
 
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>

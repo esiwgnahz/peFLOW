@@ -1,3 +1,11 @@
+// ---------------------------------------------------------------------
+//
+// Copyright (C) 2016 - 2017 Eldar Khattatov
+//
+// This file is part of peFLOW.
+//
+// ---------------------------------------------------------------------
+
 #ifndef PEFLOW_DARCY_DATA_H
 #define PEFLOW_DARCY_DATA_H
 

@@ -1,7 +1,10 @@
+// ---------------------------------------------------------------------
 //
-// Created by eldar on 6/4/17.
+// Copyright (C) 2016 - 2017 Eldar Khattatov
 //
-
+// This file is part of peFLOW.
+//
+// ---------------------------------------------------------------------
 #ifndef PEFLOW_ELASTICITY_MSMFE_H
 #define PEFLOW_ELASTICITY_MSMFE_H
 

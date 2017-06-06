@@ -1,3 +1,11 @@
+// ---------------------------------------------------------------------
+//
+// Copyright (C) 2016 - 2017 Ilona Ambartsumyan, Eldar Khattatov
+//
+// This file is part of peFLOW.
+//
+// ---------------------------------------------------------------------
+
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/lac/full_matrix.h>
