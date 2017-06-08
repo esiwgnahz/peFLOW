@@ -1,0 +1,153 @@
+# Listing of Parameters
+# ---------------------
+#################################################################################
+# Discretization
+set degree         = 0
+set refinements   = 3
+set grid_flag      = 0
+set time_step      = 0.001
+set num_time_steps = 10
+
+#################################################################################
+# Physical parameters
+set alpha= 1.0
+set Storativity   = 1.0
+
+subsection permeability 2D
+  set Function constants  =
+  # Order: 00,01,10,11
+  set Function expression = 1; 0; 0; 1
+  set Variable names      = x,y,t
+end
+
+subsection permeability 3D
+  set Function constants  =
+  # Order: 00,01,10,11
+  set Function expression = 1; 0; 0; 0; 1; 0; 0; 0; 1
+  set Variable names      = x,y,z,t
+end
+
+
+subsection lambda 2D
+  set Function constants  =
+  set Function expression = 123.0
+  set Variable names      = x,y,t
+end
+
+subsection lambda 3D
+  set Function constants  =
+  set Function expression = 123.0
+  set Variable names      = x,y,z,t
+end
+
+subsection mu 2D
+  set Function constants  =
+  set Function expression = 79.3
+  set Variable names      = x,y,t
+end
+
+subsection mu 3D
+  set Function constants  =
+  set Function expression = 79.3
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Right hand sides
+# Darcy RHS
+subsection Darcy RHS 2D
+  set Function constants  =
+  set Function expression = x+y+exp(t)*sin(x+y)*2.0+exp(t)*sin(x+y)
+  set Variable names      = x,y,t
+end
+subsection Darcy RHS 3D
+  set Function constants  =
+  set Function expression = x+y+exp(t)*sin(x+y)*2.0+1.0*exp(t)*sin(x+y)
+  set Variable names      = x,y,z,t
+end
+
+# Elasticity RHS
+subsection Elasticity RHS 2D
+  set Function constants  =
+  set Function expression =123.0*t+79.3*t*2.0-exp(t)*cos(x+y); 123.0*t+79.3*t*2.0-exp(t)*cos(x+y)
+  set Variable names      = x,y,t
+end
+subsection Elasticity RHS 3D
+  set Function constants  =
+  set Function expression = 123.0*t+79.3*t*2.0-exp(t)*cos(x+y); 123.0*t+79.3*t*2.0-exp(t)*cos(x+y)
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Boundary conditions
+# Darcy BC
+subsection Darcy BC 2D
+  set Function constants  =
+  set Function expression = exp(t)*sin(x+y)
+  set Variable names      = x,y,t
+end
+subsection Darcy BC 3D
+  set Function constants  =
+  set Function expression = exp(t)*sin(x+y)
+  set Variable names      = x,y,z,t
+end
+
+# Elasticity BC
+subsection Elasticity BC 2D
+  set Function constants  =
+  set Function expression = t*0.5*x*x; t*0.5*y*y
+  set Variable names      = x,y,t
+end
+subsection Elasticity BC 3D
+  set Function constants  =
+  set Function expression = t*0.5*x^2; t*0.5*y^2
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Initial conditions (only pressure and stress values are used)
+subsection Initial conditions 2D
+  set Function constants  =
+  # Order: velocity, pressure, stress, displacement, rotation
+  set Function expression = 0; 0; sin(x+y); -sin(x+y); 0; 0; -sin(x+y); 0; 0; 0
+  set Variable names      = x,y,t
+end
+subsection Initial conditions 3D
+  set Function constants  =
+  # Order: velocity, pressure, stress, displacement, rotation
+  set Function expression = 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Exact solution, values
+subsection Exact solution 2D
+  set Function constants  =
+  # Order: velocity, pressure, stress, displacement, rotation
+  set Function expression = -exp(t)*cos(x+y); -exp(t)*cos(x+y); exp(t)*sin(x+y); 123.0*(t*x+t*y)-exp(t)*sin(x+y)+79.3*t*x*2.0; 0.0; 0.0; 123.0*(t*x+t*y)-exp(t)*sin(x+y)+79.3*t*y*2.0; t*0.5*x^2; t*0.5*y^2; 0.0
+  set Variable names      = x,y,t
+end
+
+subsection Exact solution 3D
+  set Function constants  =
+  # Order: velocity, pressure, stress, displacement, rotation
+  set Function expression =  0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Exact solution, gradient values (only velocity and stress values are used)
+subsection Exact gradient 2D
+  set Function constants  =
+  # Order: velocity, pressure, stress, displacement, rotation
+  set Function expression = exp(t)*sin(x+y); exp(t)*sin(x+y); exp(t)*sin(x+y); exp(t)*sin(x+y); 0.0; 0.0; 123.0*t+79.3*t*2.0-exp(t)*cos(x+y); 123.0*t-exp(t)*cos(x+y); 0.0; 0.0; 0.0; 0.0; 123.0*t-exp(t)*cos(x+y); 123.0*t+79.3*t*2.0-exp(t)*cos(x+y); 0.0; 0.0; 0.0; 0.0; 0.0; 0.0
+  set Variable names      = x,y,t
+end
+subsection Exact gradient 3D
+  set Function constants  =
+  # Order: velocity, pressure, stress, displacement, rotation
+  set Function expression = 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0; 0
+  set Variable names      = x,y,z,t
+end
+
+

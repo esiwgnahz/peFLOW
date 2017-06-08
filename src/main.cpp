@@ -7,10 +7,14 @@
 // ---------------------------------------------------------------------
 
 #include <deal.II/base/multithread_info.h>
+#include "../inc/biot_mfe.h"
+#include "../inc/biot_parameter_reader.h"
 #include "../inc/darcy_mfe.h"
 #include "../inc/darcy_mfmfe.h"
 #include "../inc/elasticity_mfe.h"
 #include "../inc/elasticity_msmfe.h"
+
+//#include <deal.II/base/parameter_handler.h>
 
 // Main function
 int main()
@@ -19,6 +23,7 @@ int main()
     using namespace dealii;
     using namespace darcy;
     using namespace elasticity;
+    using namespace biot;
 
     MultithreadInfo::set_thread_limit();
 
@@ -30,9 +35,25 @@ int main()
     //mixed_darcy_problem_2d.run(3,0);
     //mixed_darcy_problem_2d.run(7,0);
 
-    MultipointMixedElasticityProblem<2> mixed_elasticity_problem_2d(2);
+    //MultipointMixedElasticityProblem<2> mixed_elasticity_problem_2d(2);
     //MixedElasticityProblem<2> mixed_elasticity_problem_2d(2);
-    mixed_elasticity_problem_2d.run(5);
+    //mixed_elasticity_problem_2d.run(5);
+
+    ParameterHandler  prm;
+    ParameterReader   param(prm);
+
+    param.read_parameters("parameters_new.prm");
+    // Get degree, grid and time discretization parameters
+    const unsigned int degree = prm.get_integer("degree");
+    const unsigned int grid  = prm.get_integer("grid_flag");
+    const unsigned int refinements = prm.get_integer("refinements");
+    const double time_step = prm.get_double("time_step");
+    const unsigned int num_time_steps = prm.get_integer("num_time_steps");
+
+    std::cout << "2D case: " << "\n";
+    MixedBiotProblem<2> mixed_biot_problem_2d(degree,prm, time_step, num_time_steps);
+
+    mixed_biot_problem_2d.run(refinements,grid);
 
 
   } catch (std::exception &exc) {

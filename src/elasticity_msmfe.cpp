@@ -265,7 +265,7 @@ namespace elasticity
       for (unsigned int i=0; i<dofs_per_cell; ++i)
       {
         bool rotation_flag = false;
-        Tensor<2,dim> asigma = compliance_tensor(phi_i_s[i], lambda_values[q], mu_values[q]);
+        Tensor<2,dim> asigma = compliance_tensor_stress(phi_i_s[i], lambda_values[q], mu_values[q]);
         for (unsigned int j=i; j<dofs_per_cell; ++j)
         {
           Tensor<2,dim> sigma = make_tensor(phi_i_s[j]);

@@ -131,13 +131,13 @@ namespace utilities
   }
 
 
-  // Create compliance tensor
+  // Create compliance tensor for stress variables
   template <int dim>
-  Tensor<2,dim> compliance_tensor(const std::vector<Tensor<1,dim>> &vec, double &lambda, double &mu)
+  Tensor<2,dim> compliance_tensor_stress(const std::vector<Tensor<1,dim>> &vec, const double mu, const double lambda)
   {
     Tensor<2,dim> res;
-
     double trace=0.;
+
     for (unsigned int i=0;i<dim;++i)
       trace += vec[i][i];
 
@@ -147,6 +147,18 @@ namespace utilities
           res[row][col] = 1/(2*mu)*(vec[row][col] - lambda/(2*mu + dim*lambda)*trace);
         else
           res[row][col] = 1/(2*mu)*(vec[row][col]);
+
+    return res;
+  }
+
+  // Create compliance tensor for pressure variables
+  template <int dim>
+  Tensor<2,dim> compliance_tensor_pressure(const double &pres, const double mu, const double lambda)
+  {
+    Tensor<2,dim> res;
+
+    for(unsigned int i=0;i<dim;i++)
+      res[i][i] = pres/(2*mu+dim*lambda);
 
     return res;
   }
@@ -184,3 +196,4 @@ namespace utilities
 }
 
 #endif //PEFLOW_UTILITIES_H
+
