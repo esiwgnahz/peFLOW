@@ -38,9 +38,10 @@ namespace elasticity
 
   // MixedElasticityProblem: class constructor
   template <int dim>
-  MixedElasticityProblem<dim>::MixedElasticityProblem (const unsigned int deg)
+  MixedElasticityProblem<dim>::MixedElasticityProblem (const unsigned int deg, ParameterHandler &param)
           :
           degree(deg),
+          prm(param),
           total_dim(dim*dim + dim + static_cast<int>(0.5*dim*(dim-1))),
           fe(FE_BDM<dim>(deg), dim,
              FE_DGP<dim>(deg-1), dim,
@@ -117,7 +118,10 @@ namespace elasticity
   MixedElasticityProblem<dim>::CellAssemblyScratchData::
   CellAssemblyScratchData (const FiniteElement<dim> &fe,
                            const Quadrature<dim>    &quadrature,
-                           const Quadrature<dim-1>  &face_quadrature)
+                           const Quadrature<dim-1>  &face_quadrature,
+                           const LameCoefficients<dim> &lame_data,
+                           Functions::ParsedFunction<dim> *bc,
+                           Functions::ParsedFunction<dim> *rhs)
           :
           fe_values (fe,
                      quadrature,
@@ -126,7 +130,10 @@ namespace elasticity
           fe_face_values (fe,
                           face_quadrature,
                           update_values     | update_quadrature_points   |
-                          update_JxW_values | update_normal_vectors)
+                          update_JxW_values | update_normal_vectors),
+          lame(lame_data),
+          bc(bc),
+          rhs(rhs)
   {}
 
   template <int dim>
@@ -140,7 +147,10 @@ namespace elasticity
           fe_face_values (scratch_data.fe_face_values.get_fe(),
                           scratch_data.fe_face_values.get_quadrature(),
                           update_values     | update_quadrature_points   |
-                          update_JxW_values | update_normal_vectors)
+                          update_JxW_values | update_normal_vectors),
+          lame(scratch_data.lame),
+          bc(scratch_data.bc),
+          rhs(scratch_data.rhs)
   {}
 
   // Copy local contributions to global system
@@ -174,18 +184,6 @@ namespace elasticity
 
     scratch_data.fe_values.reinit (cell);
 
-    std::vector<double>     lambda_values (n_q_points);
-    std::vector<double>     mu_values (n_q_points);
-
-    const LameFirstParameter<dim> lambda;
-    const LameSecondParameter<dim> mu;
-
-    const RightHandSide<dim>              right_hand_side;
-    const DisplacementBoundaryValues<dim> displacement_boundary_values;
-
-    std::vector<Vector<double>> rhs_values (n_q_points, Vector<double>(dim));
-    std::vector<Vector<double>> boundary_values (n_face_q_points, Vector<double>(dim));
-
     // Stress and rotation DoFs vectors
     std::vector<FEValuesExtractors::Vector> stresses(dim, FEValuesExtractors::Vector());
     std::vector<FEValuesExtractors::Scalar> rotations(rotation_dim, FEValuesExtractors::Scalar());
@@ -207,10 +205,6 @@ namespace elasticity
       }
     }
 
-    lambda.value_list (scratch_data.fe_values.get_quadrature_points(), lambda_values);
-    mu.value_list     (scratch_data.fe_values.get_quadrature_points(), mu_values);
-
-    right_hand_side.vector_value_list (scratch_data.fe_values.get_quadrature_points(),rhs_values);
 
     // Stress, divergence and rotation
     std::vector<std::vector<Tensor<1,dim>>> phi_i_s(dofs_per_cell, std::vector<Tensor<1,dim>> (dim));
@@ -235,7 +229,10 @@ namespace elasticity
 
       for (unsigned int i=0; i<dofs_per_cell; ++i)
       {
-        Tensor<2,dim> asigma = compliance_tensor(phi_i_s[i], lambda_values[q], mu_values[q]);
+        Point<dim> point = scratch_data.fe_values.get_quadrature_points()[q];
+        const double mu = scratch_data.lame.mu_value(point);
+        const double lambda = scratch_data.lame.lambda_value(point);
+        Tensor<2,dim> asigma = compliance_tensor_stress<dim>(phi_i_s[i], mu, lambda);
         for (unsigned int j=i; j<dofs_per_cell; ++j)
         {
           Tensor<2,dim> sigma = make_tensor(phi_i_s[j]);
@@ -247,7 +244,7 @@ namespace elasticity
         }
 
         for (unsigned d_i=0; d_i<dim; ++d_i)
-          copy_data.cell_rhs(i) += -(phi_i_u[i][d_i] * rhs_values[q][d_i]) * scratch_data.fe_values.JxW(q);
+          copy_data.cell_rhs(i) += -(phi_i_u[i][d_i] * scratch_data.rhs->value(scratch_data.fe_values.get_quadrature_points()[q], d_i)) * scratch_data.fe_values.JxW(q);
       }
     }
 
@@ -262,8 +259,6 @@ namespace elasticity
       {
         scratch_data.fe_face_values.reinit (cell, face_no);
 
-        displacement_boundary_values.vector_value_list (scratch_data.fe_face_values.get_quadrature_points(), boundary_values);
-
         for (unsigned int q=0; q<n_face_q_points; ++q)
           for (unsigned int i=0; i<dofs_per_cell; ++i)
           {
@@ -273,7 +268,8 @@ namespace elasticity
 
             Tensor<1,dim> sigma_n = sigma * scratch_data.fe_face_values.normal_vector(q);
             for (unsigned int d_i=0; d_i<dim; ++d_i)
-              copy_data.cell_rhs(i) += ((sigma_n[d_i]*boundary_values[q][d_i])*scratch_data.fe_face_values.JxW(q));
+              copy_data.cell_rhs(i) += ((sigma_n[d_i]*scratch_data.bc->value(scratch_data.fe_face_values.get_quadrature_points()[q],d_i))
+                                       *scratch_data.fe_face_values.JxW(q));
 
           }
       }
@@ -283,6 +279,29 @@ namespace elasticity
   template <int dim>
   void MixedElasticityProblem<dim>::assemble_system ()
   {
+    Functions::ParsedFunction<dim> *mu                  = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *lambda              = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *bc       = new Functions::ParsedFunction<dim>(dim);
+    Functions::ParsedFunction<dim> *rhs      = new Functions::ParsedFunction<dim>(dim);
+
+    prm.enter_subsection(std::string("lambda ") + Utilities::int_to_string(dim)+std::string("D"));
+    lambda->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("mu ") + Utilities::int_to_string(dim)+std::string("D"));
+    mu->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("BC ")+ Utilities::int_to_string(dim)+std::string("D"));
+    bc->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("RHS ") + Utilities::int_to_string(dim)+std::string("D"));
+    rhs->parse_parameters(prm);
+    prm.leave_subsection();
+
+    LameCoefficients<dim> lame(prm,mu, lambda);
+
     TimerOutput::Scope t(computing_timer, "Assemble system");
     QGauss<dim> quad(2*(degree+1)+1);
     QGauss<dim-1> face_quad(2*(degree+1)+1);
@@ -292,8 +311,13 @@ namespace elasticity
                     *this,
                     &MixedElasticityProblem::assemble_system_cell,
                     &MixedElasticityProblem::copy_local_to_global,
-                    CellAssemblyScratchData(fe,quad,face_quad),
+                    CellAssemblyScratchData(fe,quad,face_quad, lame, bc, rhs),
                     CellAssemblyCopyData());
+
+    delete mu;
+    delete lambda;
+    delete bc;
+    delete rhs;
   }
 
 
@@ -317,7 +341,16 @@ namespace elasticity
     const ComponentSelectFunction<dim> rotation_mask(dim*dim+dim, MixedElasticityProblem<dim>::total_dim);
     const ComponentSelectFunction<dim> displacement_mask(std::make_pair(dim*dim,dim*dim+dim), MixedElasticityProblem<dim>::total_dim);
     const ComponentSelectFunction<dim> stress_mask(std::make_pair(0,dim*dim), MixedElasticityProblem<dim>::total_dim);
-    ExactSolution<dim> exact_solution;
+    
+    ExactSolution<dim> exact_solution(prm);
+    prm.enter_subsection(std::string("Exact solution ")+ Utilities::int_to_string(dim)+std::string("D"));
+    exact_solution.exact_solution_val_data.parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("Exact gradient ")+ Utilities::int_to_string(dim)+std::string("D"));
+    exact_solution.exact_solution_grad_val_data.parse_parameters(prm);
+    prm.leave_subsection();
+
 
     // Vectors to temporarily store cellwise errros
     Vector<double> cellwise_errors (triangulation.n_active_cells());

@@ -1,0 +1,81 @@
+# Listing of Parameters
+# ---------------------
+#################################################################################
+# Discretization
+set degree         = 1
+set refinements    = 2
+set grid_flag      = 0
+
+#################################################################################
+# Physical parameters
+
+subsection permeability 2D
+  set Function constants  =
+  # Order: 00,01,10,11
+  set Function expression = pow(x+1.0,2.0)/(x*4.0+(x^2)*(y^2)-pow(sin(x*y),2.0)+x*(y^2)*2.0+(x^2)*6.0+(x^3)*4.0+x^4+y^2+1.0); -sin(x*y)/(x*4.0+(x^2)*(y^2)-pow(sin(x*y),2.0)+x*(y^2)*2.0+(x^2)*6.0+(x^3)*4.0+x^4+y^2+1.0); -sin(x*y)/(x*4.0+(x^2)*(y^2)-pow(sin(x*y),2.0)+x*(y^2)*2.0+(x^2)*6.0+(x^3)*4.0+x^4+y^2+1.0); (x*2.0+x^2+y^2+1.0)/(x*4.0+(x^2)*(y^2)-pow(sin(x*y),2.0)+x*(y^2)*2.0+(x^2)*6.0+(x^3)*4.0+x^4+y^2+1.0)
+  set Variable names      = x,y,t
+end
+
+subsection permeability 3D
+  set Function constants  =
+  # Order: 00,01,10,11
+  set Function expression = (y*1.2E1+cos(y*z*2.0)*(1.0/2.0)+(y*y)*(z*z)+y*(z*z)*6.0+(y*y)*2.0+(z*z)*9.0+3.5E1/2.0)/(y*1.18E2-cos(x*y*2.0)+cos(y*z*2.0)*2.0+(x*x)*(y*y)*2.0+(x*x)*(z*z)*9.0+(y*y)*(z*z)*3.7E1+(y*y*y)*(z*z)*1.0E1+(y*y*y*y)*(z*z)+y*cos(y*z*2.0)*2.0+(x*x)*y*1.2E1+y*(z*z)*6.0E1+(x*x)*(3.5E1/2.0)+(y*y)*(1.47E2/2.0)+(y*y*y)*2.0E1+(y*y*y*y)*2.0+(z*z)*(7.1E1/2.0)+(x*x)*cos(y*z*2.0)*(1.0/2.0)-(z*z)*cos(x*y*2.0)*(1.0/2.0)+(y*y)*cos(y*z*2.0)*(1.0/2.0)+(x*x)*y*(z*z)*6.0+(x*x)*(y*y)*(z*z)+6.9E1); (cos(x*y)*sin(y*z))/(y*1.2E2+(x*x)*(y*y)*2.0+(x*x)*(z*z)*9.0+(y*y)*(z*z)*3.7E1+(y*y*y)*(z*z)*1.0E1+(y*y*y*y)*(z*z)-pow(cos(x*y),2.0)*2.0-pow(sin(y*z),2.0)*4.0-(z*z)*pow(cos(x*y),2.0)-(x*x)*pow(sin(y*z),2.0)-(y*y)*pow(sin(y*z),2.0)+(x*x)*y*1.2E1+y*(z*z)*6.0E1+(x*x)*1.8E1+(y*y)*7.4E1+(y*y*y)*2.0E1+(y*y*y*y)*2.0+(z*z)*3.6E1-y*pow(sin(y*z),2.0)*4.0+(x*x)*y*(z*z)*6.0+(x*x)*(y*y)*(z*z)+7.2E1); (cos(x*y)*(z*z+2.0)*-2.0)/(y*2.36E2+cos(y*z*2.0)*4.0+(x*x)*(y*y)*4.0+(x*x)*(z*z)*1.8E1+(y*y)*(z*z)*7.4E1+(y*y*y)*(z*z)*2.0E1+(y*y*y*y)*(z*z)*2.0-pow(cos(x*y),2.0)*4.0-(z*z)*pow(cos(x*y),2.0)*2.0+y*cos(y*z*2.0)*4.0+(x*x)*y*2.4E1+y*(z*z)*1.2E2+(x*x)*3.5E1+(y*y)*1.47E2+(y*y*y)*4.0E1+(y*y*y*y)*4.0+(z*z)*7.2E1+(x*x)*cos(y*z*2.0)+(y*y)*cos(y*z*2.0)+(x*x)*y*(z*z)*1.2E1+(x*x)*(y*y)*(z*z)*2.0+1.4E2); (cos(x*y)*sin(y*z))/(y*1.2E2+(x*x)*(y*y)*2.0+(x*x)*(z*z)*9.0+(y*y)*(z*z)*3.7E1+(y*y*y)*(z*z)*1.0E1+(y*y*y*y)*(z*z)-pow(cos(x*y),2.0)*2.0-pow(sin(y*z),2.0)*4.0-(z*z)*pow(cos(x*y),2.0)-(x*x)*pow(sin(y*z),2.0)-(y*y)*pow(sin(y*z),2.0)+(x*x)*y*1.2E1+y*(z*z)*6.0E1+(x*x)*1.8E1+(y*y)*7.4E1+(y*y*y)*2.0E1+(y*y*y*y)*2.0+(z*z)*3.6E1-y*pow(sin(y*z),2.0)*4.0+(x*x)*y*(z*z)*6.0+(x*x)*(y*y)*(z*z)+7.2E1); (y*6.0E1-cos(x*y*2.0)*(1.0/2.0)+(x*x)*(y*y)+(x*x)*y*6.0+(x*x)*9.0+(y*y)*3.7E1+(y*y*y)*1.0E1+y*y*y*y+7.1E1/2.0)/(y*1.18E2-cos(x*y*2.0)+cos(y*z*2.0)*2.0+(x*x)*(y*y)*2.0+(x*x)*(z*z)*9.0+(y*y)*(z*z)*3.7E1+(y*y*y)*(z*z)*1.0E1+(y*y*y*y)*(z*z)+y*cos(y*z*2.0)*2.0+(x*x)*y*1.2E1+y*(z*z)*6.0E1+(x*x)*(3.5E1/2.0)+(y*y)*(1.47E2/2.0)+(y*y*y)*2.0E1+(y*y*y*y)*2.0+(z*z)*(7.1E1/2.0)+(x*x)*cos(y*z*2.0)*(1.0/2.0)-(z*z)*cos(x*y*2.0)*(1.0/2.0)+(y*y)*cos(y*z*2.0)*(1.0/2.0)+(x*x)*y*(z*z)*6.0+(x*x)*(y*y)*(z*z)+6.9E1); -(sin(y*z)*(y*4.0+x*x+y*y+4.0))/(y*1.18E2-cos(x*y*2.0)+cos(y*z*2.0)*2.0+(x*x)*(y*y)*2.0+(x*x)*(z*z)*9.0+(y*y)*(z*z)*3.7E1+(y*y*y)*(z*z)*1.0E1+(y*y*y*y)*(z*z)+y*cos(y*z*2.0)*2.0+(x*x)*y*1.2E1+y*(z*z)*6.0E1+(x*x)*(3.5E1/2.0)+(y*y)*(1.47E2/2.0)+(y*y*y)*2.0E1+(y*y*y*y)*2.0+(z*z)*(7.1E1/2.0)+(x*x)*cos(y*z*2.0)*(1.0/2.0)-(z*z)*cos(x*y*2.0)*(1.0/2.0)+(y*y)*cos(y*z*2.0)*(1.0/2.0)+(x*x)*y*(z*z)*6.0+(x*x)*(y*y)*(z*z)+6.9E1); (cos(x*y)*(z*z+2.0)*-2.0)/(y*2.36E2+cos(y*z*2.0)*4.0+(x*x)*(y*y)*4.0+(x*x)*(z*z)*1.8E1+(y*y)*(z*z)*7.4E1+(y*y*y)*(z*z)*2.0E1+(y*y*y*y)*(z*z)*2.0-pow(cos(x*y),2.0)*4.0-(z*z)*pow(cos(x*y),2.0)*2.0+y*cos(y*z*2.0)*4.0+(x*x)*y*2.4E1+y*(z*z)*1.2E2+(x*x)*3.5E1+(y*y)*1.47E2+(y*y*y)*4.0E1+(y*y*y*y)*4.0+(z*z)*7.2E1+(x*x)*cos(y*z*2.0)+(y*y)*cos(y*z*2.0)+(x*x)*y*(z*z)*1.2E1+(x*x)*(y*y)*(z*z)*2.0+1.4E2); -(sin(y*z)*(y*4.0+x*x+y*y+4.0))/(y*1.18E2-cos(x*y*2.0)+cos(y*z*2.0)*2.0+(x*x)*(y*y)*2.0+(x*x)*(z*z)*9.0+(y*y)*(z*z)*3.7E1+(y*y*y)*(z*z)*1.0E1+(y*y*y*y)*(z*z)+y*cos(y*z*2.0)*2.0+(x*x)*y*1.2E1+y*(z*z)*6.0E1+(x*x)*(3.5E1/2.0)+(y*y)*(1.47E2/2.0)+(y*y*y)*2.0E1+(y*y*y*y)*2.0+(z*z)*(7.1E1/2.0)+(x*x)*cos(y*z*2.0)*(1.0/2.0)-(z*z)*cos(x*y*2.0)*(1.0/2.0)+(y*y)*cos(y*z*2.0)*(1.0/2.0)+(x*x)*y*(z*z)*6.0+(x*x)*(y*y)*(z*z)+6.9E1); ((z*z+2.0)*(y*4.0+x*x+y*y+4.0))/(y*1.18E2-cos(x*y*2.0)+cos(y*z*2.0)*2.0+(x*x)*(y*y)*2.0+(x*x)*(z*z)*9.0+(y*y)*(z*z)*3.7E1+(y*y*y)*(z*z)*1.0E1+(y*y*y*y)*(z*z)+y*cos(y*z*2.0)*2.0+(x*x)*y*1.2E1+y*(z*z)*6.0E1+(x*x)*(3.5E1/2.0)+(y*y)*(1.47E2/2.0)+(y*y*y)*2.0E1+(y*y*y*y)*2.0+(z*z)*(7.1E1/2.0)+(x*x)*cos(y*z*2.0)*(1.0/2.0)-(z*z)*cos(x*y*2.0)*(1.0/2.0)+(y*y)*cos(y*z*2.0)*(1.0/2.0)+(x*x)*y*(z*z)*6.0+(x*x)*(y*y)*(z*z)+6.9E1)
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Right hand side and Boundary condition
+subsection RHS 2D
+  set Function constants  =
+  set Function expression = -(x*2.0+2.0)*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y))+pow(x+1.0,2.0)*((x*x*x)*(y*y)*-1.2E1+sin(x*y)*cos(y)+x*cos(x*y)*sin(y)*2.0+(x*x)*sin(x*y)*cos(y))-(pow(x+1.0,2.0)+y*y)*(x*(y*y*y*y)*6.0-(y*y)*sin(x*y)*cos(y)+2.0)-sin(x*y)*((x*x)*(y*y*y)*1.2E1+cos(x*y)*cos(y)-y*cos(x*y)*sin(y)-x*y*sin(x*y)*cos(y))*2.0-x*cos(x*y)*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y))-y*cos(x*y)*((x*x*x)*(y*y*y)*4.0-sin(x*y)*sin(y)+x*cos(x*y)*cos(y))
+  set Variable names      = x,y,t
+end
+subsection RHS 3D
+  set Function constants  =
+  set Function expression = -(y*2.0-sin(z))*pow(y+3.0,2.0)-(pow(y+2.0,2.0)+x*x)*((x*x)*(y*y*y)*1.2E1-(y*y)*cos(x*y)+2.0)-(z*z+2.0)*((x*x*x*x)*y*6.0-(x*x)*cos(x*y))-z*sin(y*z)*4.0-x*(x*2.0+(x*x*x)*(y*y*y)*4.0-y*sin(x*y))*2.0-z*cos(y*z)*(cos(z)+y*z*2.0)+y*sin(x*y)*(cos(z)+y*z*2.0)-y*cos(y*z)*((x*x*x*x)*(y*y)*3.0-x*sin(x*y)+z*z)
+  set Variable names      = x,y,z,t
+end
+
+subsection BC 2D
+  set Function constants  =
+  set Function expression = (x*x*x)*(y*y*y*y)+x*x+sin(x*y)*cos(y)
+  set Variable names      = x,y,t
+end
+subsection BC 3D
+  set Function constants  =
+  set Function expression = cos(x*y)+sin(z)+(x*x*x*x)*(y*y*y)+y*(z*z)+x*x
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Exact solution, values
+subsection Exact solution 2D
+  set Function constants  =
+  # Order: velocity, pressure
+  set Function expression = -sin(x*y)*((x*x*x)*(y*y*y)*4.0-sin(x*y)*sin(y)+x*cos(x*y)*cos(y))-(pow(x+1.0,2.0)+y*y)*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y)); -pow(x+1.0,2.0)*((x*x*x)*(y*y*y)*4.0-sin(x*y)*sin(y)+x*cos(x*y)*cos(y))-sin(x*y)*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y)); (x*x*x)*(y*y*y*y)+x*x+sin(x*y)*cos(y)
+  set Variable names      = x,y,t
+end
+
+subsection Exact solution 3D
+  set Function constants  =
+  # Order: velocity, pressure
+  set Function expression =  -cos(x*y)*(cos(z)+y*z*2.0)-(pow(y+2.0,2.0)+x*x)*(x*2.0+(x*x*x)*(y*y*y)*4.0-y*sin(x*y)); -(z*z+2.0)*((x*x*x*x)*(y*y)*3.0-x*sin(x*y)+z*z)-sin(y*z)*(cos(z)+y*z*2.0); -sin(y*z)*((x*x*x*x)*(y*y)*3.0-x*sin(x*y)+z*z)-(cos(z)+y*z*2.0)*pow(y+3.0,2.0)-cos(x*y)*(x*2.0+(x*x*x)*(y*y*y)*4.0-y*sin(x*y)); cos(x*y)+sin(z)+(x*x*x*x)*(y*y*y)+y*(z*z)+x*x
+  set Variable names      = x,y,z,t
+end
+
+#################################################################################
+# Exact solution, gradient values (only velocity is used)
+subsection Exact gradient 2D
+  set Function constants  =
+  # Order: velocity, pressure
+  set Function expression = -(x*2.0+2.0)*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y))-(pow(x+1.0,2.0)+y*y)*(x*(y*y*y*y)*6.0-(y*y)*sin(x*y)*cos(y)+2.0)-sin(x*y)*((x*x)*(y*y*y)*1.2E1+cos(x*y)*cos(y)-y*cos(x*y)*sin(y)-x*y*sin(x*y)*cos(y))-y*cos(x*y)*((x*x*x)*(y*y*y)*4.0-sin(x*y)*sin(y)+x*cos(x*y)*cos(y)); y*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y))*-2.0-(pow(x+1.0,2.0)+y*y)*((x*x)*(y*y*y)*1.2E1+cos(x*y)*cos(y)-y*cos(x*y)*sin(y)-x*y*sin(x*y)*cos(y))+sin(x*y)*((x*x*x)*(y*y)*-1.2E1+sin(x*y)*cos(y)+x*cos(x*y)*sin(y)*2.0+(x*x)*sin(x*y)*cos(y))-x*cos(x*y)*((x*x*x)*(y*y*y)*4.0-sin(x*y)*sin(y)+x*cos(x*y)*cos(y)); -sin(x*y)*(x*(y*y*y*y)*6.0-(y*y)*sin(x*y)*cos(y)+2.0)-pow(x+1.0,2.0)*((x*x)*(y*y*y)*1.2E1+cos(x*y)*cos(y)-y*cos(x*y)*sin(y)-x*y*sin(x*y)*cos(y))-(x*2.0+2.0)*((x*x*x)*(y*y*y)*4.0-sin(x*y)*sin(y)+x*cos(x*y)*cos(y))-y*cos(x*y)*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y)); pow(x+1.0,2.0)*((x*x*x)*(y*y)*-1.2E1+sin(x*y)*cos(y)+x*cos(x*y)*sin(y)*2.0+(x*x)*sin(x*y)*cos(y))-sin(x*y)*((x*x)*(y*y*y)*1.2E1+cos(x*y)*cos(y)-y*cos(x*y)*sin(y)-x*y*sin(x*y)*cos(y))-x*cos(x*y)*(x*2.0+(x*x)*(y*y*y*y)*3.0+y*cos(x*y)*cos(y)); 0; 0
+  set Variable names      = x,y,t
+end
+subsection Exact gradient 3D
+  set Function constants  =
+  # Order: velocity, pressure
+  set Function expression = -(pow(y+2.0,2.0)+x*x)*((x*x)*(y*y*y)*1.2E1-(y*y)*cos(x*y)+2.0)-x*(x*2.0+(x*x*x)*(y*y*y)*4.0-y*sin(x*y))*2.0+y*sin(x*y)*(cos(z)+y*z*2.0); (pow(y+2.0,2.0)+x*x)*(sin(x*y)-(x*x*x)*(y*y)*1.2E1+x*y*cos(x*y))-(y*2.0+4.0)*(x*2.0+(x*x*x)*(y*y*y)*4.0-y*sin(x*y))-z*cos(x*y)*2.0+x*sin(x*y)*(cos(z)+y*z*2.0); -cos(x*y)*(y*2.0-sin(z)); (z*z+2.0)*(sin(x*y)-(x*x*x)*(y*y)*1.2E1+x*y*cos(x*y)); -(z*z+2.0)*((x*x*x*x)*y*6.0-(x*x)*cos(x*y))-z*sin(y*z)*2.0-z*cos(y*z)*(cos(z)+y*z*2.0); z*(z*z+2.0)*-2.0-sin(y*z)*(y*2.0-sin(z))-z*((x*x*x*x)*(y*y)*3.0-x*sin(x*y)+z*z)*2.0-y*cos(y*z)*(cos(z)+y*z*2.0); sin(y*z)*(sin(x*y)-(x*x*x)*(y*y)*1.2E1+x*y*cos(x*y))-cos(x*y)*((x*x)*(y*y*y)*1.2E1-(y*y)*cos(x*y)+2.0)+y*sin(x*y)*(x*2.0+(x*x*x)*(y*y*y)*4.0-y*sin(x*y)); z*pow(y+3.0,2.0)*-2.0-sin(y*z)*((x*x*x*x)*y*6.0-(x*x)*cos(x*y))-(y*2.0+6.0)*(cos(z)+y*z*2.0)+cos(x*y)*(sin(x*y)-(x*x*x)*(y*y)*1.2E1+x*y*cos(x*y))-z*cos(y*z)*((x*x*x*x)*(y*y)*3.0-x*sin(x*y)+z*z)+x*sin(x*y)*(x*2.0+(x*x*x)*(y*y*y)*4.0-y*sin(x*y)); -(y*2.0-sin(z))*pow(y+3.0,2.0)-z*sin(y*z)*2.0-y*cos(y*z)*((x*x*x*x)*(y*y)*3.0-x*sin(x*y)+z*z); 0; 0; 0
+  set Variable names      = x,y,z,t
+end
+
+

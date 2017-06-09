@@ -13,6 +13,8 @@
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/iterative_inverse.h>
 
+#include <deal.II/base/parsed_function.h>
+
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/grid_in.h>
@@ -40,9 +42,10 @@ namespace darcy
 
   // MultipointMixedDarcyProblem: class constructor
   template <int dim>
-  MultipointMixedDarcyProblem<dim>::MultipointMixedDarcyProblem (const unsigned int degree)
+  MultipointMixedDarcyProblem<dim>::MultipointMixedDarcyProblem (const unsigned int degree, ParameterHandler &param)
           :
           degree(degree),
+          prm(param),
           fe(FE_RT_Bubbles<dim>(degree), 1,
              FE_DGQ<dim>(degree-1), 1),
           dof_handler(triangulation),
@@ -70,7 +73,10 @@ namespace darcy
   VertexAssemblyScratchData (const FiniteElement<dim> &fe,
                              const Triangulation<dim> &tria,
                              const Quadrature<dim> &quad,
-                             const Quadrature<dim-1> &f_quad)
+                             const Quadrature<dim-1> &f_quad,
+                             const KInverse<dim> &k_data,
+                             Functions::ParsedFunction<dim> *bc,
+                             Functions::ParsedFunction<dim> *rhs)
           :
           fe_values (fe,
                      quad,
@@ -80,7 +86,10 @@ namespace darcy
                           f_quad,
                           update_values     | update_quadrature_points   |
                           update_JxW_values | update_normal_vectors),
-          num_cells(tria.n_active_cells())
+          num_cells(tria.n_active_cells()),
+          K_inv(k_data),
+          bc(bc),
+          rhs(rhs)
   {
     n_faces_at_vertex.resize(tria.n_vertices(), 0);
     typename Triangulation<dim>::active_face_iterator face = tria.begin_active_face(), endf = tria.end_face();
@@ -103,7 +112,10 @@ namespace darcy
                           update_values     | update_quadrature_points   |
                           update_JxW_values | update_normal_vectors),
           n_faces_at_vertex(scratch_data.n_faces_at_vertex),
-          num_cells(scratch_data.num_cells)
+          num_cells(scratch_data.num_cells),
+          K_inv(scratch_data.K_inv),
+          bc(scratch_data.bc),
+          rhs(scratch_data.rhs)
   {}
 
 
@@ -146,21 +158,12 @@ namespace darcy
 
     scratch_data.fe_values.reinit (cell);
 
-
-    const RightHandSide<dim>              right_hand_side;
-    const PressureBoundaryValues<dim>     pressure_boundary_values;
-    const KInverse<dim>                   k_inverse;
-
-    std::vector<double> rhs_values (n_q_points);
-    std::vector<double> boundary_values (n_face_q_points);
-    std::vector<Tensor<2,dim> > k_inverse_values (n_q_points);
+    std::vector<Tensor<2,dim>>             k_inverse_values (n_q_points);
+    scratch_data.K_inv.value_list (scratch_data.fe_values.get_quadrature_points(), k_inverse_values);
 
     // Velocity and pressure DoFs vectors
     const FEValuesExtractors::Vector velocity (0);
     const FEValuesExtractors::Scalar pressure (dim);
-
-    right_hand_side.value_list (scratch_data.fe_values.get_quadrature_points(),rhs_values);
-    k_inverse.value_list (scratch_data.fe_values.get_quadrature_points(), k_inverse_values);
 
     unsigned int n_vel = dim*pow(degree+1,dim);
     std::unordered_map<unsigned int, std::unordered_map<unsigned int, double>> div_map;
@@ -186,7 +189,7 @@ namespace darcy
             div_map[i][j] += div_term;
         }
 
-        double source_term = -phi_i_p *rhs_values[q] *scratch_data.fe_values.JxW(q);
+        double source_term = -phi_i_p *scratch_data.rhs->value(scratch_data.fe_values.get_quadrature_points()[q]) *scratch_data.fe_values.JxW(q);
 
         bool pres_flag = false;
         if (fabs(phi_i_p) > 1.e-12)
@@ -238,13 +241,12 @@ namespace darcy
       if ( (cell->at_boundary(face_no)) ) // && (cell->face(face_no)->boundary_id() != 1)
       {
         scratch_data.fe_face_values.reinit (cell, face_no);
-        pressure_boundary_values.value_list (scratch_data.fe_face_values.get_quadrature_points(), boundary_values);
 
         for (unsigned int q=0; q<n_face_q_points; ++q) {
           for (unsigned int i = 0; i < dofs_per_cell; ++i) {
             double tmp = -(scratch_data.fe_face_values[velocity].value(i, q) *
                            scratch_data.fe_face_values.normal_vector(q) *
-                           boundary_values[q] *
+                           scratch_data.bc->value(scratch_data.fe_face_values.get_quadrature_points()[q]) *
                            scratch_data.fe_face_values.JxW(q));
 
             if (fabs(tmp) > 1.e-12)
@@ -264,6 +266,24 @@ namespace darcy
   template <int dim>
   void MultipointMixedDarcyProblem<dim>::vertex_assembly()
   {
+    Functions::ParsedFunction<dim> *k_inv = new Functions::ParsedFunction<dim>(dim*dim);
+    Functions::ParsedFunction<dim> *bc       = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *rhs      = new Functions::ParsedFunction<dim>(1);
+
+    prm.enter_subsection(std::string("permeability ") + Utilities::int_to_string(dim)+std::string("D"));
+    k_inv->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("BC ") + Utilities::int_to_string(dim)+std::string("D"));
+    bc->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("RHS ") + Utilities::int_to_string(dim)+std::string("D"));
+    rhs->parse_parameters(prm);
+    prm.leave_subsection();
+
+    KInverse<dim> k_inverse(prm,k_inv);
+
     TimerOutput::Scope t(computing_timer, "Vertex assembly");
 
     dof_handler.distribute_dofs(fe);
@@ -284,8 +304,13 @@ namespace darcy
                     *this,
                     &MultipointMixedDarcyProblem::assemble_system_cell,
                     &MultipointMixedDarcyProblem::copy_cell_to_vertex,
-                    VertexAssemblyScratchData(fe, triangulation,quad,face_quad),
+                    VertexAssemblyScratchData(fe, triangulation,quad,face_quad,
+                                              k_inverse, bc, rhs),
                     VertexAssemblyCopyData());
+
+    delete k_inv;
+    delete bc;
+    delete rhs;
   }
 
   template <int dim>
@@ -402,6 +427,24 @@ namespace darcy
   template <int dim>
   void MultipointMixedDarcyProblem<dim>::pressure_assembly()
   {
+    Functions::ParsedFunction<dim> *k_inv = new Functions::ParsedFunction<dim>(dim*dim);
+    Functions::ParsedFunction<dim> *bc       = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *rhs      = new Functions::ParsedFunction<dim>(1);
+
+    prm.enter_subsection(std::string("permeability ") + Utilities::int_to_string(dim)+std::string("D"));
+    k_inv->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("BC ") + Utilities::int_to_string(dim)+std::string("D"));
+    bc->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("RHS ") + Utilities::int_to_string(dim)+std::string("D"));
+    rhs->parse_parameters(prm);
+    prm.leave_subsection();
+
+    KInverse<dim> k_inverse(prm,k_inv);
+
     TimerOutput::Scope t(computing_timer, "Pressure matrix assembly");
 
     QGaussLobatto<dim> quad(degree+1);
@@ -415,8 +458,13 @@ namespace darcy
                     *this,
                     &MultipointMixedDarcyProblem::vertex_elimination,
                     &MultipointMixedDarcyProblem::copy_vertex_to_system,
-                    VertexAssemblyScratchData(fe, triangulation, quad, face_quad),
+                    VertexAssemblyScratchData(fe, triangulation, quad, face_quad,
+                                              k_inverse, bc, rhs),
                     VertexEliminationCopyData());
+
+    delete k_inv;
+    delete bc;
+    delete rhs;
 
   }
 
@@ -470,6 +518,24 @@ namespace darcy
   template <int dim>
   void MultipointMixedDarcyProblem<dim>::velocity_recovery()
   {
+    Functions::ParsedFunction<dim> *k_inv = new Functions::ParsedFunction<dim>(dim*dim);
+    Functions::ParsedFunction<dim> *bc       = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *rhs      = new Functions::ParsedFunction<dim>(1);
+
+    prm.enter_subsection(std::string("permeability ") + Utilities::int_to_string(dim)+std::string("D"));
+    k_inv->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("BC ") + Utilities::int_to_string(dim)+std::string("D"));
+    bc->parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("RHS ") + Utilities::int_to_string(dim)+std::string("D"));
+    rhs->parse_parameters(prm);
+    prm.leave_subsection();
+
+    KInverse<dim> k_inverse(prm,k_inv);
+
     TimerOutput::Scope t(computing_timer, "Velocity solution recovery");
 
     QGaussLobatto<dim> quad(degree+1);
@@ -482,13 +548,18 @@ namespace darcy
                     *this,
                     &MultipointMixedDarcyProblem::velocity_assembly,
                     &MultipointMixedDarcyProblem::copy_vertex_velocity_to_global,
-                    VertexAssemblyScratchData(fe, triangulation, quad, face_quad),
+                    VertexAssemblyScratchData(fe, triangulation, quad, face_quad,
+                                              k_inverse, bc, rhs),
                     VertexEliminationCopyData());
 
     solution.reinit(2);
     solution.block(0) = vel_solution;
     solution.block(1) = pres_solution;
     solution.collect_sizes();
+
+    delete k_inv;
+    delete bc;
+    delete rhs;
   }
 
 // MultipointMixedDarcyProblem: Solve SPD cell-centered system for pressure
@@ -516,7 +587,14 @@ namespace darcy
     const ComponentSelectFunction<dim> pressure_mask(dim, dim+1);
     const ComponentSelectFunction<dim> velocity_mask(std::make_pair(0, dim), dim+1);
 
-    ExactSolution<dim> exact_solution;
+    ExactSolution<dim> exact_solution( prm);
+    prm.enter_subsection(std::string("Exact solution ")+ Utilities::int_to_string(dim)+std::string("D"));
+    exact_solution.exact_solution_val_data.parse_parameters(prm);
+    prm.leave_subsection();
+
+    prm.enter_subsection(std::string("Exact gradient ")+ Utilities::int_to_string(dim)+std::string("D"));
+    exact_solution.exact_solution_grad_val_data.parse_parameters(prm);
+    prm.leave_subsection();
 
     // Vectors to temporarily store cellwise errros
     Vector<double> cellwise_errors (triangulation.n_active_cells());

@@ -16,11 +16,16 @@
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
 
+#include <deal.II/base/parsed_function.h>
+
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
 
 #include "utilities.h"
 #include <unordered_map>
+
+#include "../inc/utilities.h"
+#include "../inc/darcy_data.h"
 
 namespace darcy
 {
@@ -31,9 +36,10 @@ namespace darcy
   class MultipointMixedDarcyProblem
   {
   public:
-    MultipointMixedDarcyProblem (const unsigned int degree);
+    MultipointMixedDarcyProblem (const unsigned int degree, ParameterHandler &);
     void run (const unsigned int refine, const unsigned int grid = 0);
   private:
+    ParameterHandler &prm;
     const unsigned int  degree;
     Triangulation<dim>  triangulation;
     FESystem<dim>       fe;
@@ -48,13 +54,21 @@ namespace darcy
       VertexAssemblyScratchData (const FiniteElement<dim> &fe,
                                  const Triangulation<dim>       &tria,
                                  const Quadrature<dim> &quad,
-                                 const Quadrature<dim-1> &f_quad);
+                                 const Quadrature<dim-1> &f_quad,
+                                 const KInverse<dim> &k_data, 
+                                 Functions::ParsedFunction<dim> *bc,
+                                 Functions::ParsedFunction<dim> *rhs);
 
       VertexAssemblyScratchData (const VertexAssemblyScratchData &scratch_data);
 
       FEValues<dim>       fe_values;
       FEFaceValues<dim>   fe_face_values;
       std::vector<int>    n_faces_at_vertex;
+
+      KInverse<dim>     K_inv;
+      Functions::ParsedFunction<dim> *bc;
+      Functions::ParsedFunction<dim> *rhs;
+
       const unsigned long num_cells;
     };
 

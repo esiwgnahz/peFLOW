@@ -16,17 +16,17 @@ namespace biot
 {
   using namespace dealii;
 
-class ParameterReader : public Subscriptor
+class BiotParameterReader : public Subscriptor
   {
   public:
-    ParameterReader(ParameterHandler &paramhandler) : prm(paramhandler) {}
+    BiotParameterReader(ParameterHandler &paramhandler) : prm(paramhandler) {}
     inline void read_parameters(const std::string);
   private:
     inline void declare_parameters();
     ParameterHandler &prm;
   };
 
-  inline void ParameterReader::declare_parameters()
+  inline void BiotParameterReader::declare_parameters()
   {
     prm.declare_entry("degree", "0",
                       Patterns::Integer());
@@ -183,11 +183,11 @@ class ParameterReader : public Subscriptor
     }
     prm.leave_subsection();
   }
-  inline void ParameterReader::read_parameters (const std::string parameter_file)
+  inline void BiotParameterReader::read_parameters (const std::string parameter_file)
   {
     declare_parameters();
     prm.read_input (parameter_file);
   }
 }
 
-#endif //PEFLOW_DARCY_MFE_H
+#endif //PEFLOW_BIOT_PARAMETER_READER_H

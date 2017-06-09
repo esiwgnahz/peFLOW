@@ -40,9 +40,10 @@ namespace darcy
 
     // MixedDarcyProblem: class constructor
     template <int dim>
-    MixedDarcyProblem<dim>::MixedDarcyProblem (const unsigned int degree)
+    MixedDarcyProblem<dim>::MixedDarcyProblem (const unsigned int degree, ParameterHandler &param)
             :
             degree(degree),
+            prm(param),
             fe(FE_RaviartThomas<dim>(degree-1), 1, 
                FE_DGQ<dim>(degree-1), 1), 
             dof_handler(triangulation),
@@ -111,7 +112,10 @@ namespace darcy
     MixedDarcyProblem<dim>::CellAssemblyScratchData::
     CellAssemblyScratchData (const FiniteElement<dim> &fe,
                              const Quadrature<dim>    &quadrature,
-                             const Quadrature<dim-1>  &face_quadrature)
+                             const Quadrature<dim-1>  &face_quadrature,
+                             const KInverse<dim> &k_data,
+                             Functions::ParsedFunction<dim> *bc_data,
+                             Functions::ParsedFunction<dim> *rhs_data)
             :
             fe_values (fe,
                        quadrature,
@@ -120,7 +124,10 @@ namespace darcy
             fe_face_values (fe,
                             face_quadrature,
                             update_values     | update_quadrature_points   |
-                            update_JxW_values | update_normal_vectors)
+                            update_JxW_values | update_normal_vectors),
+            K_inv(k_data),
+            bc(bc_data),
+            rhs(rhs_data)
     {}
 
 
@@ -135,7 +142,10 @@ namespace darcy
             fe_face_values (scratch_data.fe_face_values.get_fe(),
                             scratch_data.fe_face_values.get_quadrature(),
                             update_values     | update_quadrature_points   |
-                            update_JxW_values | update_normal_vectors)
+                            update_JxW_values | update_normal_vectors),
+            K_inv(scratch_data.K_inv),
+            bc(scratch_data.bc),
+            rhs(scratch_data.rhs)
     {}
 
 
@@ -170,21 +180,13 @@ namespace darcy
 
         scratch_data.fe_values.reinit (cell);
 
-        const RightHandSide<dim>              right_hand_side;
-        const PressureBoundaryValues<dim>     pressure_boundary_values;
-        const KInverse<dim>                   k_inverse;
-
-        std::vector<double > rhs_values (n_q_points);
-        std::vector<double > boundary_values (n_face_q_points);
-        std::vector<Tensor<2,dim> > k_inverse_values (n_q_points);
-
-        // Velocity DoFs vectors
+        // Velocity  and Pressure DoFs vectors
         const FEValuesExtractors::Vector velocity(0);
         const FEValuesExtractors::Scalar pressure (dim);
 
 
-        right_hand_side.value_list (scratch_data.fe_values.get_quadrature_points(),rhs_values);
-        k_inverse.value_list (scratch_data.fe_values.get_quadrature_points(), k_inverse_values);
+        std::vector<Tensor<2,dim>>             k_inverse_values (n_q_points);
+        scratch_data.K_inv.value_list (scratch_data.fe_values.get_quadrature_points(), k_inverse_values);
 
 
         for (unsigned int q=0; q<n_q_points; ++q)
@@ -205,7 +207,8 @@ namespace darcy
                                                   * scratch_data.fe_values.JxW(q);
                 }
 
-                copy_data.cell_rhs(i) += -phi_i_p *rhs_values[q] *scratch_data.fe_values.JxW(q);
+                copy_data.cell_rhs(i) += -phi_i_p *scratch_data.rhs->value(scratch_data.fe_values.get_quadrature_points()[q]) 
+                                            *scratch_data.fe_values.JxW(q);
             }
         }
 
@@ -216,14 +219,12 @@ namespace darcy
             {
                 scratch_data.fe_face_values.reinit (cell, face_no);
 
-                pressure_boundary_values.value_list (scratch_data.fe_face_values.get_quadrature_points(), boundary_values);
-
                 for (unsigned int q=0; q<n_face_q_points; ++q)
                     for (unsigned int i=0; i<dofs_per_cell; ++i)
                     {
                         copy_data.cell_rhs(i) += -(scratch_data.fe_face_values[velocity].value (i, q) *
                                                    scratch_data.fe_face_values.normal_vector(q) *
-                                                   boundary_values[q] *
+                                                   scratch_data.bc->value(scratch_data.fe_face_values.get_quadrature_points()[q]) *
                                                    scratch_data.fe_face_values.JxW(q));
 
                     }
@@ -235,29 +236,35 @@ namespace darcy
     template <int dim>
     void MixedDarcyProblem<dim>::assemble_system ()
     {
+      Functions::ParsedFunction<dim> *k_inv    = new Functions::ParsedFunction<dim>(dim*dim);
+      Functions::ParsedFunction<dim> *bc       = new Functions::ParsedFunction<dim>(1);
+      Functions::ParsedFunction<dim> *rhs      = new Functions::ParsedFunction<dim>(1);
+
+      prm.enter_subsection(std::string("permeability ") + Utilities::int_to_string(dim)+std::string("D"));
+      k_inv->parse_parameters(prm);
+      prm.leave_subsection();
+
+      prm.enter_subsection("BC " + Utilities::int_to_string(dim)+std::string("D"));
+      bc->parse_parameters(prm);
+      prm.leave_subsection();
+
+      prm.enter_subsection("RHS " + Utilities::int_to_string(dim)+std::string("D"));
+      rhs->parse_parameters(prm);
+      prm.leave_subsection();
+
       TimerOutput::Scope t(computing_timer, "Assemble system");
       QGauss<dim> quad(2*(degree+1)+1);
       QGauss<dim-1> face_quad(2*(degree+1)+1);
+
+      KInverse<dim> k_inverse(prm,k_inv);
 
       WorkStream::run(dof_handler.begin_active(),
                       dof_handler.end(),
                       *this,
                       &MixedDarcyProblem::assemble_system_cell,
                       &MixedDarcyProblem::copy_local_to_global,
-                      CellAssemblyScratchData(fe,quad,face_quad),
+                      CellAssemblyScratchData(fe,quad,face_quad, k_inverse, bc, rhs),
                       CellAssemblyCopyData());
-
-      std::map<types::global_dof_index,double> velocity_boundary_values;
-      const FEValuesExtractors::Vector velocity(0);
-      typename FunctionMap<dim>::type  velocity_boundary_functions;
-      ExactSolution<dim> func = ExactSolution<dim>();
-      velocity_boundary_functions[1] = &func;
-      //    VectorTools::project_boundary_values (dof_handler,
-      //                                          velocity_boundary_functions,
-      //                                          QGauss<dim-1>(3),
-      //                                          velocity_boundary_values);
-      //    MatrixTools::apply_boundary_values (velocity_boundary_values,
-      //                                        system_matrix, solution, system_rhs);
     }
 
 
@@ -374,7 +381,14 @@ namespace darcy
       const ComponentSelectFunction<dim> pressure_mask(dim, dim+1);
       const ComponentSelectFunction<dim> velocity_mask(std::make_pair(0, dim), dim+1);
 
-      ExactSolution<dim> exact_solution;
+      ExactSolution<dim> exact_solution(prm);
+      prm.enter_subsection(std::string("Exact solution ")+ Utilities::int_to_string(dim)+std::string("D"));
+      exact_solution.exact_solution_val_data.parse_parameters(prm);
+      prm.leave_subsection();
+
+      prm.enter_subsection(std::string("Exact gradient ")+ Utilities::int_to_string(dim)+std::string("D"));
+      exact_solution.exact_solution_grad_val_data.parse_parameters(prm);
+      prm.leave_subsection();
 
       // Vectors to temporarily store cellwise errros
       Vector<double> cellwise_errors (triangulation.n_active_cells());

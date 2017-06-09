@@ -513,31 +513,31 @@ namespace biot
     const double alpha = prm.get_double("alpha");
     const double c_0 = prm.get_double("Storativity");
 
-    prm.enter_subsection("permeability 2D");
+    prm.enter_subsection(std::string("permeability ")+ Utilities::int_to_string(dim)+std::string("D"));
     k_inv->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("lambda 2D");
+    prm.enter_subsection(std::string("lambda ")+ Utilities::int_to_string(dim)+std::string("D"));
     lambda->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("mu 2D");
+    prm.enter_subsection(std::string("mu ")+ Utilities::int_to_string(dim)+std::string("D"));
     mu->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Darcy BC 2D");
+    prm.enter_subsection(std::string("Darcy BC ")+ Utilities::int_to_string(dim)+std::string("D"));
     darcy_bc->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Elasticity BC 2D");
+    prm.enter_subsection(std::string("Elasticity BC ")+ Utilities::int_to_string(dim)+std::string("D"));
     elasticity_bc->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Darcy RHS 2D");
+    prm.enter_subsection(std::string("Darcy RHS ")+ Utilities::int_to_string(dim)+std::string("D"));
     darcy_rhs->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Elasticity RHS 2D");
+    prm.enter_subsection(std::string("Elasticity RHS ")+ Utilities::int_to_string(dim)+std::string("D"));
     elasticity_rhs->parse_parameters(prm);
     prm.leave_subsection();
 
@@ -577,31 +577,31 @@ namespace biot
     const double alpha = prm.get_double("alpha");
     const double c_0 = prm.get_double("Storativity");
 
-    prm.enter_subsection("permeability 2D");
+    prm.enter_subsection(std::string("permeability ")+ Utilities::int_to_string(dim)+std::string("D"));
     k_inv->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("lambda 2D");
+    prm.enter_subsection(std::string("lambda ")+ Utilities::int_to_string(dim)+std::string("D"));
     lambda->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("mu 2D");
+    prm.enter_subsection(std::string("mu ")+ Utilities::int_to_string(dim)+std::string("D"));
     mu->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Darcy BC 2D");
+    prm.enter_subsection(std::string("Darcy BC ")+ Utilities::int_to_string(dim)+std::string("D"));
     darcy_bc->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Elasticity BC 2D");
+    prm.enter_subsection(std::string("Elasticity BC ")+ Utilities::int_to_string(dim)+std::string("D"));
     elasticity_bc->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Darcy RHS 2D");
+    prm.enter_subsection(std::string("Darcy RHS ")+ Utilities::int_to_string(dim)+std::string("D"));
     darcy_rhs->parse_parameters(prm);
     prm.leave_subsection();
 
-    prm.enter_subsection("Elasticity RHS 2D");
+    prm.enter_subsection(std::string("Elasticity RHS ")+ Utilities::int_to_string(dim)+std::string("D"));
     elasticity_rhs->parse_parameters(prm);
     prm.leave_subsection();
 
@@ -1144,61 +1144,4 @@ namespace biot
 }
 
 
-
-
-// Main function
-//int main()
-//{
-//  try {
-//    using namespace dealii;
-//    using namespace biot;
-
-//    MultithreadInfo::set_thread_limit();
-
-//    std::ofstream log_file("log_file.txt");
-//    deallog.attach(log_file);
-//    deallog.depth_file(2);
-
-
-//    ParameterHandler  prm;
-//    ParameterReader   param(prm);
-
-//    param.read_parameters("parameters_new.prm");
-//    // Get degree, grid and time discretization parameters
-//    const unsigned int degree = prm.get_integer("degree");
-//    const unsigned int grid  = prm.get_integer("grid_flag");
-//    const unsigned int refinements = prm.get_integer("refinements");
-//    const double time_step = prm.get_double("time_step");
-//    const unsigned int num_time_steps = prm.get_integer("num_time_steps");
-
-//    std::cout << "2D case: " << "\n";
-//    MixedBiotProblem<2> mixed_biot_problem_2d(degree,prm, time_step, num_time_steps);
-
-//    mixed_biot_problem_2d.run(refinements,grid);
-
-//  } catch (std::exception &exc) {
-//    std::cerr << std::endl << std:: endl
-//              << "----------------------------------------------------"
-//              << std::endl;
-//    std::cerr << "Exception on processing: " << std::endl
-//              << exc.what() << std::endl
-//              << "Aborting!" << std::endl
-//              << "----------------------------------------------------"
-//              << std::endl;
-
-//    return 1;
-//  } catch(...) {
-//    std::cerr << std::endl << std::endl
-//              << "----------------------------------------------------"
-//              << std::endl;
-//    std::cerr << "Unknown exception!" << std::endl
-//              << "Aborting!" << std::endl
-//              << "----------------------------------------------------"
-//              << std::endl;
-
-//    return 1;
-//  }
-
-//  return 0;
-//}
 

@@ -43,8 +43,8 @@ namespace biot
     :
       Function<dim>(dim+1+dim*dim + dim + (3-dim)*(dim-1) + (dim-2)*dim),
       prm(param),
-      exact_solution_val_data(10),
-      exact_solution_grad_val_data(20),
+      exact_solution_val_data(dim+1+dim*dim + dim + (3-dim)*(dim-1) + (dim-2)*dim),
+      exact_solution_grad_val_data( dim*(dim+1+dim*dim + dim + (3-dim)*(dim-1) + (dim-2)*dim)),
       current_time(cur_time)
   {}
 
@@ -110,7 +110,7 @@ namespace biot
                                        std::vector<Tensor<1,dim,double>> &grads) const
   {
     Tensor<1,dim> tmp;
-    int total_dim = 1+dim+dim*dim + dim + static_cast<int>(0.5*dim*(dim-1));
+    int total_dim = dim*dim + dim + static_cast<int>(0.5*dim*(dim-1));
 
 
     switch (dim)
@@ -170,13 +170,6 @@ namespace biot
         tmp[2] = 0.0;
         grads[3] = tmp;
         // Stress
-        // sigma 12, 13, 21, 23, 31 and 32
-        grads[5] = tmp;
-        grads[6] =tmp;
-        grads[7] =tmp;
-        grads[9] =tmp;
-        grads[10] =tmp;
-        grads[11] =tmp;
         //sigma 11
         tmp[0] = exact_solution_grad_val_data.value(p,12);
         tmp[1] = exact_solution_grad_val_data.value(p,13);
@@ -319,7 +312,7 @@ namespace biot
   LameCoefficients<dim>::LameCoefficients(ParameterHandler &param, const Functions::ParsedFunction<dim> *mu_data,
                                           const Functions::ParsedFunction<dim> *lambda_data)
     :
-      Function<dim>(2),
+      Function<dim>(dim),
       prm(param),
       mu(mu_data),
       lambda(lambda_data)

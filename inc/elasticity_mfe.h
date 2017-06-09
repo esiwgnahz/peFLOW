@@ -16,8 +16,13 @@
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_values.h>
 
+#include <deal.II/base/parsed_function.h>
+
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
+
+#include "../inc/utilities.h"
+#include "../inc/elasticity_data.h"
 
 namespace elasticity
 {
@@ -27,17 +32,24 @@ namespace elasticity
   class MixedElasticityProblem
   {
   public:
-    MixedElasticityProblem(const unsigned int deg);
+    MixedElasticityProblem(const unsigned int deg, ParameterHandler &);
     void run(const unsigned int refine, const unsigned int grid = 0);
   private:
+    ParameterHandler &prm;
     struct CellAssemblyScratchData
     {
       CellAssemblyScratchData (const FiniteElement<dim> &fe,
                                const Quadrature<dim>    &quadrature,
-                               const Quadrature<dim-1>  &face_quadrature);
+                               const Quadrature<dim-1>  &face_quadrature,
+                               const LameCoefficients<dim> &lame, 
+                               Functions::ParsedFunction<dim> *bc,
+                               Functions::ParsedFunction<dim> *rhs);
       CellAssemblyScratchData (const CellAssemblyScratchData &scratch_data);
       FEValues<dim>     fe_values;
       FEFaceValues<dim> fe_face_values;
+      LameCoefficients<dim> lame;
+      Functions::ParsedFunction<dim> *bc;
+      Functions::ParsedFunction<dim> *rhs;
     };
 
     struct CellAssemblyCopyData
