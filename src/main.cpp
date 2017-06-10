@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------------
 
 #include <deal.II/base/multithread_info.h>
+#include "../inc/problem.h"
 #include "../inc/biot_mfe.h"
 #include "../inc/biot_parameter_reader.h"
 #include "../inc/darcy_parameter_reader.h"
@@ -16,7 +17,6 @@
 #include "../inc/elasticity_mfe.h"
 #include "../inc/elasticity_msmfe.h"
 
-//#include <deal.II/base/parameter_handler.h>
 
 // Main function
 int main()
@@ -33,156 +33,160 @@ int main()
     deallog.attach(log_file);
     deallog.depth_file(2);
 
-    unsigned int flag;
-    std::cout << " Choose the model to run: " << std::endl;
-    std::cout << "1: Mixed Darcy Problem, 2D" <<std::endl;
-    std::cout << "2: Mixed Darcy Problem, 3D" <<std::endl;
-    std::cout << "3: Multipoint Mixed Darcy Problem, 2D" <<std::endl;
-    std::cout << "4: Multipoint Mixed Darcy Problem, 3D" <<std::endl;
-    std::cout << "5: Mixed Elasticity Problem, 2D" <<std::endl;
-    std::cout << "6: Mixed Elasticity Problem, 3D" <<std::endl;
-    std::cout << "7: Multipoint Mixed Elasticity Problem, 2D" <<std::endl;
-    std::cout << "8: Multipoint Mixed Elasticity Problem, 3D" <<std::endl;
-    std::cout << "9: Mixed Biot Problem, 2D" <<std::endl;
+    unsigned int model, dim;
+    std::cout << "=========================================" <<std::endl;
+    std::cout << "Choose the model to run: " << std::endl;
+    std::cout << "  1: Mixed Darcy Problem" <<std::endl;
+    std::cout << "  2: Multipoint Mixed Darcy Problem" <<std::endl;
+    std::cout << "  3: Mixed Elasticity Problem" <<std::endl;
+    std::cout << "  4: Multipoint Mixed Elasticity Problem" <<std::endl;
+    std::cout << "  5: Mixed Biot Problem" <<std::endl;
 
-   // std::cin >> flag;
-    flag = 6;
+    std::cin >> model;
+    std::cout << "=========================================" <<std::endl;
+    std::cout << "Specify dimension: " << std::endl;
+    std::cin >> dim;
 
-    std::cout << "============================================" <<std::endl;
+    ParameterHandler prm;
+    Problem<2> *problem2d;
+    Problem<3> *problem3d;
 
-    ParameterHandler  prm;
+    if(model == 1)
+    {
+      DarcyParameterReader   param(prm);
+      param.read_parameters("parameters_darcy.prm");
 
-    if(flag == 1){
-        std::cout << "Mixed Darcy, 2D case: " << std::endl;
+      // Get parameters
+      const unsigned int degree = prm.get_integer("degree");
+      const unsigned int grid  = prm.get_integer("grid_flag");
+      const unsigned int refinements = prm.get_integer("refinements");
 
-        DarcyParameterReader   param(prm);
-        param.read_parameters("parameters_darcy.prm");
-
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MixedDarcyProblem<2> mixed_darcy_problem_2d(degree, prm);
-        mixed_darcy_problem_2d.run(refinements,grid);
+      switch(dim)
+      {
+        case 2:
+          std::cout << "Mixed Darcy, 2D case: " << std::endl;
+          problem2d = new MixedDarcyProblem<2>(degree, prm);
+          problem2d->run(refinements, grid);
+          break;
+        case 3:
+          std::cout << "Mixed Darcy, 3D case: " << std::endl;
+          problem3d = new MixedDarcyProblem<3>(degree, prm);
+          problem3d->run(refinements, grid);
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
       }
-    else if(flag == 2){
-        std::cout << "Mixed Darcy, 3D case: " << std::endl;
+    }
+    else if(model == 2)
+    {
+      DarcyParameterReader   param(prm);
+      param.read_parameters("parameters_darcy.prm");
 
-        DarcyParameterReader   param(prm);
-        param.read_parameters("parameters_darcy.prm");
+      // Get parameters
+      const unsigned int degree = prm.get_integer("degree");
+      const unsigned int grid  = prm.get_integer("grid_flag");
+      const unsigned int refinements = prm.get_integer("refinements");
 
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MixedDarcyProblem<3> mixed_darcy_problem_3d(degree, prm);
-        mixed_darcy_problem_3d.run(refinements,grid);
+      switch(dim)
+      {
+        case 2:
+          std::cout << "Multipoint Mixed Darcy, 2D case: " << std::endl;
+          problem2d = new MultipointMixedDarcyProblem<2>(degree, prm);
+          problem2d->run(refinements, grid);
+          break;
+        case 3:
+          std::cout << "Multipoint Mixed Darcy, 3D case: " << std::endl;
+          problem3d = new MultipointMixedDarcyProblem<3>(degree, prm);
+          problem3d->run(refinements, grid);
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
       }
-    else if(flag == 3){
-        std::cout << "Multipoint Mixed Darcy, 2D case: " << std::endl;
+    }
+    else if(model == 3)
+    {
+      ElasticityParameterReader   param(prm);
+      param.read_parameters("parameters_elasticity.prm");
 
-        DarcyParameterReader   param(prm);
-        param.read_parameters("parameters_darcy.prm");
+      // Get parameters
+      const unsigned int degree = prm.get_integer("degree");
+      const unsigned int grid  = prm.get_integer("grid_flag");
+      const unsigned int refinements = prm.get_integer("refinements");
 
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MultipointMixedDarcyProblem<2> multipoint_mixed_darcy_problem_2d(degree, prm);
-        multipoint_mixed_darcy_problem_2d.run(refinements,grid);
+      switch(dim)
+      {
+        case 2:
+          std::cout << "Mixed Linear Elasticity, 2D case: " << std::endl;
+          problem2d = new MixedElasticityProblem<2>(degree, prm);
+          problem2d->run(refinements, grid);
+          break;
+        case 3:
+          std::cout << "Mixed Linear Elasticity, 3D case: " << std::endl;
+          problem3d = new MixedElasticityProblem<3>(degree, prm);
+          problem3d->run(refinements, grid);
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
       }
-    else if(flag == 4){
-        std::cout << "Multipoint Mixed Darcy, 3D case: " << std::endl;
+    }
+    else if(model == 4)
+    {
+      ElasticityParameterReader   param(prm);
+      param.read_parameters("parameters_elasticity.prm");
 
-        DarcyParameterReader   param(prm);
-        param.read_parameters("parameters_darcy.prm");
+      // Get parameters
+      const unsigned int degree = prm.get_integer("degree");
+      const unsigned int grid  = prm.get_integer("grid_flag");
+      const unsigned int refinements = prm.get_integer("refinements");
 
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MultipointMixedDarcyProblem<3> multipoint_mixed_darcy_problem_3d(degree, prm);
-        multipoint_mixed_darcy_problem_3d.run(refinements,grid);
+      switch(dim)
+      {
+        case 2:
+          std::cout << "Multipoint Mixed Linear Elasticity, 2D case: " << std::endl;
+          problem2d = new MultipointMixedElasticityProblem<2>(degree, prm);
+          problem2d->run(refinements, grid);
+          break;
+        case 3:
+          std::cout << "Multipoint Mixed Linear Elasticity, 3D case: " << std::endl;
+          problem3d = new MultipointMixedElasticityProblem<3>(degree, prm);
+          problem3d->run(refinements, grid);
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
       }
-    else if(flag == 5){
-        std::cout << "Mixed Elasticity, 2D case: " << std::endl;
+    }
+    else if(model == 5)
+    {
+      BiotParameterReader param(prm);
+      param.read_parameters("parameters_biot.prm");
 
-        ElasticityParameterReader   param(prm);
-        param.read_parameters("parameters_elasticity.prm");
+      // Get parameters
+      const unsigned int degree = prm.get_integer("degree");
+      const unsigned int grid = prm.get_integer("grid_flag");
+      const unsigned int refinements = prm.get_integer("refinements");
+      const double time_step = prm.get_double("time_step");
+      const unsigned int num_time_steps = prm.get_integer("num_time_steps");
 
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MixedElasticityProblem<2> mixed_elasticity_problem_2d(degree, prm);
-        mixed_elasticity_problem_2d.run(refinements,grid);
+      switch(dim)
+      {
+        case 2:
+          std::cout << "Mixed Biot, 2D case: " << std::endl;
+          problem2d = new MixedBiotProblem<2>(degree, prm, time_step, num_time_steps);
+          problem2d->run(refinements, grid);
+          break;
+        case 3:
+          std::cout << "Mixed Biot, 3D case: " << std::endl;
+          Assert(false, ExcNotImplemented());
+          problem3d = new MixedBiotProblemProblem<3>(degree, prm);
+          problem3d->run(refinements, grid);
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
       }
-    else if(flag == 6){
-        std::cout << "Mixed Elasticity, 3D case: " << std::endl;
+    }
 
-        ElasticityParameterReader   param(prm);
-        param.read_parameters("parameters_elasticity.prm");
-
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MixedElasticityProblem<3> mixed_elasticity_problem_3d(degree, prm);
-        mixed_elasticity_problem_3d.run(refinements,grid);
-      }
-    else if(flag == 7){
-        std::cout << "Multipoint Mixed Elasticity, 2D case: " << std::endl;
-
-        ElasticityParameterReader   param(prm);
-        param.read_parameters("parameters_elasticity.prm");
-
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MultipointMixedElasticityProblem<2> multipoint_mixed_elasticity_problem_2d(degree, prm);
-        multipoint_mixed_elasticity_problem_2d.run(refinements,grid);
-      }
-    else if(flag == 8){
-        std::cout << "Multipoint Mixed Elasticity, 3D case: " << std::endl;
-
-        ElasticityParameterReader   param(prm);
-        param.read_parameters("parameters_elasticity.prm");
-
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-
-        MultipointMixedElasticityProblem<3> multipoint_mixed_elasticity_problem_3d(degree, prm);
-        multipoint_mixed_elasticity_problem_3d.run(refinements,grid);
-      }
-    else if(flag == 9){
-        std::cout << "Mixed Biot, 2D case: " << std::endl;
-
-        BiotParameterReader   param(prm);
-        param.read_parameters("parameters_biot.prm");
-
-        // Get parameters
-        const unsigned int degree = prm.get_integer("degree");
-        const unsigned int grid  = prm.get_integer("grid_flag");
-        const unsigned int refinements = prm.get_integer("refinements");
-        const double time_step = prm.get_double("time_step");
-        const unsigned int num_time_steps = prm.get_integer("num_time_steps");
-
-        MixedBiotProblem<2> mixed_biot_problem_2d(degree,prm, time_step, num_time_steps);
-        mixed_biot_problem_2d.run(refinements,grid);
-      }
-
-
-
+    delete problem2d;
+    delete problem3d;
   } catch (std::exception &exc) {
     std::cerr << std::endl << std:: endl
               << "----------------------------------------------------"

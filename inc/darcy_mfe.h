@@ -21,6 +21,7 @@
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
 
+#include "../inc/problem.h"
 #include "../inc/utilities.h"
 #include "../inc/darcy_data.h"
 
@@ -29,15 +30,39 @@ namespace darcy
 {
   using namespace dealii;
 
+  /*
+   * Class implementing the classical Raviart-Thomas mixed finite
+   * element method for Darcy problem. The corresponding pressure
+   * space is DG_Q(k). For k-th order method, the expected
+   * convergence rates are k in all variables. The resulting
+   * system is solved via Schur complement approach, using CG with
+   * diagonal preconditioner.
+   */
   template <int dim>
-  class MixedDarcyProblem
+  class MixedDarcyProblem : public Problem<dim>
   {
   public:
-    MixedDarcyProblem(const unsigned int degree, ParameterHandler &);
-    void run(const unsigned int refine, const unsigned int grid = 0);
+    /*
+     * Class constructor takes degree and reference to parameter handle
+     * as arguments
+     */
+    MixedDarcyProblem(const unsigned int degree,
+                      ParameterHandler &);
+    /*
+     * Main driver function
+     */
+    void run(const unsigned int refine, const unsigned int grid);
   private:
+    /*
+     * Reference to a parameter handler object that stores parameters,
+     * data and the exact solution
+     */
     ParameterHandler &prm;
 
+    /*
+     * Data structure holding the information needed by threads
+     * during assembly process
+     */
     struct CellAssemblyScratchData
     {
       CellAssemblyScratchData (const FiniteElement<dim> &fe,
@@ -54,6 +79,9 @@ namespace darcy
       Functions::ParsedFunction<dim> *rhs;
     };
 
+    /*
+     * Structure to copy data from threads to the main
+     */
     struct CellAssemblyCopyData
     {
       FullMatrix<double>                   cell_matrix;
@@ -61,19 +89,44 @@ namespace darcy
       std::vector<types::global_dof_index> local_dof_indices;
     };
 
+    /*
+     * Make grid, distribute DoFs and create sparsity pattern
+     */
     void make_grid_and_dofs();
-    void assemble_system();
+
+    /*
+     * Assemble cell matrix and RHS, worker function for each thread
+     */
     void assemble_system_cell (const typename DoFHandler<dim>::active_cell_iterator &cell,
                                CellAssemblyScratchData                             &scratch,
                                CellAssemblyCopyData                                &copy_data);
+
+    /*
+     * Copy data from threads to main
+     */
     void copy_local_to_global (const CellAssemblyCopyData &copy_data);
 
+    /*
+     * Function to assign each thread to matrix and RHS assembly
+     */
+    void assemble_system();
+
+    /*
+     * Solve the saddle-point type system (CG with preconditioner)
+     */
     void solve();
+
+    /*
+     * Functions that compute errors and output results and
+     * convergence rates
+     */
     void compute_errors (const unsigned int cycle);
     void output_results (const unsigned int cycle,  const unsigned int refine);
 
+    /*
+     * Data structures and internal parameters
+     */
     const unsigned int degree;
-
     Triangulation<dim> triangulation;
     FESystem<dim>      fe;
     DoFHandler<dim>    dof_handler;
@@ -85,6 +138,9 @@ namespace darcy
     BlockVector<double> solution;
     BlockVector<double> system_rhs;
 
+    /*
+     * Convergence table and wall-time timer objects
+     */
     ConvergenceTable convergence_table;
     TimerOutput      computing_timer;
   };

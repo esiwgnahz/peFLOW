@@ -24,6 +24,7 @@
 #include "utilities.h"
 #include <unordered_map>
 
+#include "../inc/problem.h"
 #include "../inc/utilities.h"
 #include "../inc/darcy_data.h"
 
@@ -32,23 +33,36 @@ namespace darcy
   using namespace dealii;
   using namespace utilities;
 
+  /*
+   * Class implementing the arbitrary order MFMFE method for
+   * Darcy problem. Instead of solving the saddle-point type
+   * system or using the Schur complement approach we
+   * perform local velocity elimination around each node and
+   * further use it to assemble the SPD cell-centered
+   * pressure system. After solving for pressure the velocity
+   * is recovered by the same local procedure.
+   */
   template <int dim>
-  class MultipointMixedDarcyProblem
+  class MultipointMixedDarcyProblem : public Problem<dim>
   {
   public:
+    /*
+     * Class constructor takes degree and reference to parameter handle
+     * as arguments
+     */
     MultipointMixedDarcyProblem (const unsigned int degree, ParameterHandler &);
+
+    /*
+     * Main driver function
+     */
     void run (const unsigned int refine, const unsigned int grid = 0);
   private:
     ParameterHandler &prm;
-    const unsigned int  degree;
-    Triangulation<dim>  triangulation;
-    FESystem<dim>       fe;
-    DoFHandler<dim>     dof_handler;
-    BlockVector<double> solution;
 
-    void compute_errors (const unsigned int cycle);
-    void output_results (const unsigned int cycle,  const unsigned int refine);
-
+    /*
+     * Data structure holding the information needed by threads
+     * during assembly process
+     */
     struct VertexAssemblyScratchData
     {
       VertexAssemblyScratchData (const FiniteElement<dim> &fe,
@@ -72,6 +86,9 @@ namespace darcy
       const unsigned long num_cells;
     };
 
+    /*
+     * Structure to copy data from threads to the main
+     */
     struct VertexAssemblyCopyData
     {
       MapPointMatrix<dim>                  cell_mat;
@@ -81,6 +98,16 @@ namespace darcy
       std::vector<types::global_dof_index> local_dof_indices;
     };
 
+    /*
+     * Compute local cell contributions
+     */
+    void assemble_system_cell (const typename DoFHandler<dim>::active_cell_iterator &cell,
+                               VertexAssemblyScratchData                         &scratch_data,
+                               VertexAssemblyCopyData                            &copy_data);
+
+    /*
+     * Rearrange cell contributions to nodal associated blocks
+     */
     struct VertexEliminationCopyData
     {
       // Assembly
@@ -95,24 +122,49 @@ namespace darcy
       Point<dim>         p;
     };
 
-    void assemble_system_cell (const typename DoFHandler<dim>::active_cell_iterator &cell,
-                               VertexAssemblyScratchData                         &scratch_data,
-                               VertexAssemblyCopyData                            &copy_data);
     void copy_cell_to_vertex (const VertexAssemblyCopyData &copy_data);
     void vertex_assembly ();
+
+    /*
+     * Assemble and solve pressure cell-centered matrix
+     */
+    void make_cell_centered_sp ();
     void vertex_elimination (const typename MapPointMatrix<dim>::iterator &n_it,
                              VertexAssemblyScratchData                    &scratch_data,
                              VertexEliminationCopyData                    &copy_data);
     void copy_vertex_to_system (const VertexEliminationCopyData                            &copy_data);
     void pressure_assembly ();
     void solve_pressure ();
+
+    /*
+     * Recover the velocity solution
+     */
     void velocity_assembly (const typename MapPointMatrix<dim>::iterator &n_it,
                             VertexAssemblyScratchData                  &scratch_data,
                             VertexEliminationCopyData                  &copy_data);
     void copy_vertex_velocity_to_global (const VertexEliminationCopyData &copy_data);
     void velocity_recovery ();
-    void make_cell_centered_sp ();
+
+    /*
+     * Clear all hash tables to start next refinement cycle
+     */
     void reset_data_structures ();
+
+    /*
+     * Functions that compute errors and output results and
+     * convergence rates
+     */
+    void compute_errors (const unsigned int cycle);
+    void output_results (const unsigned int cycle,  const unsigned int refine);
+
+    /*
+     * Data structures and internal parameters
+     */
+    const unsigned int  degree;
+    Triangulation<dim>  triangulation;
+    FESystem<dim>       fe;
+    DoFHandler<dim>     dof_handler;
+    BlockVector<double> solution;
 
     SparsityPattern cell_centered_sp;
     SparseMatrix<double> pres_system_matrix;
@@ -133,6 +185,9 @@ namespace darcy
     Vector<double> pres_solution;
     Vector<double> vel_solution;
 
+    /*
+     * Convergence table and wall-time timer objects
+     */
     ConvergenceTable convergence_table;
     TimerOutput      computing_timer;
   };

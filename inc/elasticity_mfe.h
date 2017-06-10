@@ -21,6 +21,7 @@
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
 
+#include "../inc/problem.h"
 #include "../inc/utilities.h"
 #include "../inc/elasticity_data.h"
 
@@ -28,14 +29,38 @@ namespace elasticity
 {
   using namespace dealii;
 
+  /*
+   * Class implementing the mixed finite element method
+   * for Linear elasticity model with weakly imposed symmetry.
+   * The spaces are BDM(k) - DG_P(k-1) - DG_P(k-1), hence k > 0.
+   * For k-th order method, the expected convergence rates are k
+   * in all variables. The resulting system is solved directly.
+   */
   template <int dim>
-  class MixedElasticityProblem
+  class MixedElasticityProblem : public Problem<dim>
   {
   public:
-    MixedElasticityProblem(const unsigned int deg, ParameterHandler &);
+    /*
+     * Class constructor takes degree and reference to parameter handle
+     * as arguments
+     */
+    MixedElasticityProblem(const unsigned int deg,
+                           ParameterHandler &);
+    /*
+     * Main driver function
+     */
     void run(const unsigned int refine, const unsigned int grid = 0);
   private:
+    /*
+     * Reference to a parameter handler object that stores parameters,
+     * data and the exact solution
+     */
     ParameterHandler &prm;
+
+    /*
+     * Data structure holding the information needed by threads
+     * during assembly process
+     */
     struct CellAssemblyScratchData
     {
       CellAssemblyScratchData (const FiniteElement<dim> &fe,
@@ -52,6 +77,9 @@ namespace elasticity
       Functions::ParsedFunction<dim> *rhs;
     };
 
+    /*
+     * Structure to copy data from threads to the main
+     */
     struct CellAssemblyCopyData
     {
       FullMatrix<double>                   cell_matrix;
@@ -59,22 +87,45 @@ namespace elasticity
       std::vector<types::global_dof_index> local_dof_indices;
     };
 
-
+    /*
+     * Make grid, distribute DoFs and create sparsity pattern
+     */
     void make_grid_and_dofs();
-    void assemble_system();
+
+    /*
+     * Assemble cell matrix and RHS, worker function for each thread
+     */
     void assemble_system_cell (const typename DoFHandler<dim>::active_cell_iterator &cell,
                                CellAssemblyScratchData                             &scratch,
                                CellAssemblyCopyData                                &copy_data);
+
+    /*
+     * Copy data from threads to main
+     */
     void copy_local_to_global (const CellAssemblyCopyData &copy_data);
+
+    /*
+     * Function to assign each thread to matrix and RHS assembly
+     */
+    void assemble_system();
+
+    /*
+     * Solve the saddle-point type system (Direct UMFPACK)
+     */
     void solve();
+
+    /*
+     * Functions that compute errors and output results and
+     * convergence rates
+     */
     void compute_errors (const unsigned int cycle);
     void output_results (const unsigned int cycle,  const unsigned int refine);
 
+    /*
+     * Data structures and internal parameters
+     */
     const unsigned int degree;
     const int          total_dim;
-    Triangulation<dim> triangulation;
-    FESystem<dim>      fe;
-    DoFHandler<dim>    dof_handler;
 
     BlockSparsityPattern      sparsity_pattern;
     BlockSparseMatrix<double> system_matrix;
@@ -82,6 +133,9 @@ namespace elasticity
     BlockVector<double> solution;
     BlockVector<double> system_rhs;
 
+    /*
+     * Convergence table and wall-time timer objects
+     */
     ConvergenceTable convergence_table;
     TimerOutput      computing_timer;
   };
