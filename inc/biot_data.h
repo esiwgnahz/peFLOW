@@ -34,7 +34,7 @@ namespace biot
                                Vector<double>   &value) const;
     virtual void vector_gradient (const Point<dim> &p,
                                   std::vector<Tensor<1,dim,double>>  &grads) const;
-    inline double get_time() {return current_time;}
+    //inline double get_time() {return current_time;}
 
   };
 

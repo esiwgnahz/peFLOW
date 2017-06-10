@@ -18,6 +18,7 @@
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
 
+#include "../inc/problem.h"
 #include "utilities.h"
 #include <unordered_map>
 
@@ -27,24 +28,53 @@ namespace elasticity
   using namespace utilities;
 
   template <int dim>
-  class MultipointMixedElasticityProblem
+  class MultipointMixedElasticityProblem : public Problem<dim>
   {
   public:
+    /*
+     * Class constructor takes degree and reference to parameter handle
+     * as arguments
+     */
     MultipointMixedElasticityProblem (const unsigned int degree,  ParameterHandler &);
+
+    /*
+     * Main driver function
+     */
     void run (const unsigned int refine, const unsigned int grid = 0);
   private:
+    /*
+     * Reference to a parameter handler object that stores parameters,
+     * data and the exact solution
+     */
     ParameterHandler &prm;
 
+    /*
+     * The degree of FE spaces to use.
+     * The stable triple is RT_Bubbles(k) - DG_Q(k-1) - Q(k)
+     */
     const unsigned int  degree;
+
+    /*
+     * Total number of components of the solution
+     */
     const unsigned int  total_dim;
+
     Triangulation<dim>  triangulation;
     FESystem<dim>       fe;
     DoFHandler<dim>     dof_handler;
     BlockVector<double> solution;
 
+    /*
+     * Functions that compute errors and output results and
+     * convergence rates
+     */
     void compute_errors (const unsigned int cycle);
     void output_results (const unsigned int cycle,  const unsigned int refine);
 
+    /*
+     * Data structure holding the information needed by threads
+     * during assembly process
+     */
     struct VertexAssemblyScratchData
     {
       VertexAssemblyScratchData (const FiniteElement<dim> &fe,
@@ -68,6 +98,9 @@ namespace elasticity
       const unsigned long num_cells;
     };
 
+    /*
+     * Structure to copy data from threads to the main
+     */
     struct VertexAssemblyCopyData
     {
       MapPointMatrix<dim>                  cell_mat;
@@ -78,6 +111,15 @@ namespace elasticity
       std::vector<types::global_dof_index> local_dof_indices;
     };
 
+    /*
+     * Compute local cell contributions
+     */
+    void assemble_system_cell (const typename DoFHandler<dim>::active_cell_iterator &cell,
+                               VertexAssemblyScratchData                            &scratch_data,
+                               VertexAssemblyCopyData                               &copy_data);
+    /*
+     * Rearrange cell contributions to nodal associated blocks
+     */
     struct VertexEliminationCopyData
     {
       // Assembly
@@ -95,26 +137,37 @@ namespace elasticity
       // Indexing
       Point<dim>         p;
     };
-
-    void assemble_system_cell (const typename DoFHandler<dim>::active_cell_iterator &cell,
-                               VertexAssemblyScratchData                            &scratch_data,
-                               VertexAssemblyCopyData                               &copy_data);
     void copy_cell_to_vertex (const VertexAssemblyCopyData &copy_data);
     void vertex_assembly ();
+
+    /*
+     * Assemble and solve displacement cell-centered matrix
+     */
     void vertex_elimination (const typename MapPointMatrix<dim>::iterator &n_it,
                              VertexAssemblyScratchData                    &scratch_data,
                              VertexEliminationCopyData                    &copy_data);
     void copy_vertex_to_system (const VertexEliminationCopyData &copy_data);
+    void make_cell_centered_sp ();
     void displacement_assembly ();
     void solve_displacement ();
+
+    /*
+     * Recover the stress and rotation solutions
+     */
     void sr_assembly (const typename MapPointMatrix<dim>::iterator &n_it,
                                    VertexAssemblyScratchData                  &scratch_data,
                                    VertexEliminationCopyData                  &copy_data);
     void copy_vertex_sr_to_global (const VertexEliminationCopyData &copy_data);
     void sr_recovery ();
-    void make_cell_centered_sp ();
+
+    /*
+     * Clear all hash tables to start next refinement cycle
+     */
     void reset_data_structures ();
 
+    /*
+     * Data structures and internal parameters
+     */
     SparsityPattern cell_centered_sp;
     SparseMatrix<double> displ_system_matrix;
     Vector<double> displ_rhs;
@@ -139,6 +192,9 @@ namespace elasticity
     Vector<double> stress_solution;
     Vector<double> rotation_solution;
 
+    /*
+     * Convergence table and wall-time timer objects
+     */
     ConvergenceTable convergence_table;
     TimerOutput      computing_timer;
   };

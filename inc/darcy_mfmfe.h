@@ -24,6 +24,7 @@
 #include "utilities.h"
 #include <unordered_map>
 
+#include "../inc/problem.h"
 #include "../inc/utilities.h"
 #include "../inc/darcy_data.h"
 
@@ -33,7 +34,7 @@ namespace darcy
   using namespace utilities;
 
   template <int dim>
-  class MultipointMixedDarcyProblem
+  class MultipointMixedDarcyProblem : public Problem<dim>
   {
   public:
     MultipointMixedDarcyProblem (const unsigned int degree, ParameterHandler &);

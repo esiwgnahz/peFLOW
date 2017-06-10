@@ -21,6 +21,7 @@
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
 
+#include "../inc/problem.h"
 #include "../inc/utilities.h"
 #include "../inc/elasticity_data.h"
 
@@ -29,10 +30,11 @@ namespace elasticity
   using namespace dealii;
 
   template <int dim>
-  class MixedElasticityProblem
+  class MixedElasticityProblem : public Problem<dim>
   {
   public:
-    MixedElasticityProblem(const unsigned int deg, ParameterHandler &);
+    MixedElasticityProblem(const unsigned int deg,
+                           ParameterHandler &);
     void run(const unsigned int refine, const unsigned int grid = 0);
   private:
     ParameterHandler &prm;

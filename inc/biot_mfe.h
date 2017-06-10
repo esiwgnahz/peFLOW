@@ -23,6 +23,7 @@
 
 #include <deal.II/lac/sparse_direct.h>
 
+#include "../inc/problem.h"
 #include "../inc/utilities.h"
 #include "../inc/biot_data.h"
 
@@ -31,10 +32,12 @@ namespace biot
   using namespace dealii;
 
    template <int dim>
-  class MixedBiotProblem
+  class MixedBiotProblem : public Problem<dim>
   {
   public:
-    MixedBiotProblem(const unsigned int degree, ParameterHandler &, const double time_step,
+    MixedBiotProblem(const unsigned int degree,
+                     ParameterHandler &,
+                     const double time_step,
                      const unsigned int num_time_steps);
     void run(const unsigned int refine, const unsigned int grid = 0);
   private:
@@ -42,8 +45,12 @@ namespace biot
 
     struct CellAssemblyScratchData
     {
-      CellAssemblyScratchData (const FiniteElement<dim> &fe, const KInverse<dim> &k_data, const LameCoefficients<dim> &lame, Functions::ParsedFunction<dim> *darcy_bc,
-                               Functions::ParsedFunction<dim> *darcy_rhs, Functions::ParsedFunction<dim> *elasticity_bc,
+      CellAssemblyScratchData (const FiniteElement<dim> &fe,
+                               const KInverse<dim> &k_data,
+                               const LameCoefficients<dim> &lame,
+                               Functions::ParsedFunction<dim> *darcy_bc,
+                               Functions::ParsedFunction<dim> *darcy_rhs,
+                               Functions::ParsedFunction<dim> *elasticity_bc,
                                Functions::ParsedFunction<dim> *elasticity_rhs,
                                const double c_0, const double alpha);
       CellAssemblyScratchData (const CellAssemblyScratchData &scratch_data);

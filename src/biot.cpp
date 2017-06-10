@@ -1,55 +1,38 @@
+// ---------------------------------------------------------------------
+//
+// Copyright (C) 2016 - 2017 Ilona Ambartsumyan, Eldar Khattatov
+//
+// This file is part of peFLOW.
+//
+// ---------------------------------------------------------------------
+
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/parsed_function.h>
-// #include <deal.II/lac/block_vector.h>                  goes to biot_mfe.h
 #include <deal.II/lac/full_matrix.h>
-// #include <deal.II/lac/block_sparse_matrix.h>           goes to biot_mfe.h
-#include <deal.II/lac/solver_cg.h>
-#include <deal.II/lac/precondition.h>
-#include <deal.II/lac/iterative_inverse.h>
+#include <deal.II/lac/sparse_direct.h>
 #include <deal.II/base/utilities.h>
-
-
-// #include <deal.II/grid/tria.h>                         goes to biot_mfe.h
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools.h>
-#include <deal.II/grid/tria_accessor.h>
-#include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_in.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_renumbering.h>
-#include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/dofs/dof_tools.h>
-#include <deal.II/fe/fe_raviart_thomas.h>
+#include <deal.II/fe/fe_rt_bubbles.h>
 #include <deal.II/fe/fe_dgq.h>
 #include <deal.II/fe/fe_q.h>
-// #include <deal.II/fe/fe_system.h>                     goes to biot_mfe.h
-// #include <deal.II/fe/fe_values.h>                     goes to biot_mfe.h
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/data_out.h>
-// #include <deal.II/base/convergence_table.h>           goes to biot_mfe.h
-#include <deal.II/base/parameter_handler.h>
+#include <deal.II/base/timer.h>
+#include <deal.II/base/tensor_function.h>
 
 #include <deal.II/base/work_stream.h>
-#include <deal.II/base/multithread_info.h>
 
 #include <fstream>
 #include <iostream>
 #include <cmath>
-
-// BDM spaces
-#include <deal.II/fe/fe_rt_bubbles.h>
-//#include "polynomials_bdmenh.h"
-//#include "fe_bdmenh.h"
-
-// Sparse solvers UMFPACK
-#include <deal.II/lac/sparse_direct.h>
-
-// Timer
-// #include <deal.II/base/timer.h>                       goes to biot_mfe.h
-#include <deal.II/base/tensor_function.h>
 
 #include "../inc/biot_mfe.h"
 #include "../inc/biot_data.h"
@@ -350,7 +333,6 @@ namespace biot
 
             for (unsigned int j=0; j<dofs_per_cell; ++j)
               {
-
                 Tensor<2,dim> sigma = make_tensor(phi_i_s[j]);
 
                 copy_data.cell_matrix(i,j) += (phi_i_u[i] * k_inverse_values[q] * phi_i_u[j]+ time_step*div_phi_i_u[j] * phi_i_p[i]   // Darcy eq-n
@@ -360,7 +342,7 @@ namespace biot
                                                + scalar_product(phi_i_d[i], div_phi_i_s[j])  + scalar_product(phi_i_d[j], div_phi_i_s[i])
                                                + scalar_product(phi_i_r[i], make_asymmetry_tensor(phi_i_s[j]))
                                                + scalar_product(phi_i_r[j], make_asymmetry_tensor(phi_i_s[i])) )
-                    * scratch_data.fe_values.JxW(q);
+                                               * scratch_data.fe_values.JxW(q);
 
               }
           }
@@ -396,7 +378,7 @@ namespace biot
     scratch_data.darcy_rhs->set_time(time);
     scratch_data.elasticity_rhs->set_time(time);
 
-    const unsigned int rotation_dim    = static_cast<int>(0.5*dim*(dim-1));
+    const unsigned int rotation_dim = static_cast<int>(0.5*dim*(dim-1));
 
     // Velocity and Stress DoFs vectors
     FEValuesExtractors::Vector velocity(0);
@@ -502,9 +484,9 @@ namespace biot
   template <int dim>
   void MixedBiotProblem<dim>::assemble_system ()
   {
-    Functions::ParsedFunction<dim> *k_inv = new Functions::ParsedFunction<dim>(dim*dim);
-    Functions::ParsedFunction<dim> *mu                  = new Functions::ParsedFunction<dim>(1);
-    Functions::ParsedFunction<dim> *lambda              = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *k_inv          = new Functions::ParsedFunction<dim>(dim*dim);
+    Functions::ParsedFunction<dim> *mu             = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *lambda         = new Functions::ParsedFunction<dim>(1);
     Functions::ParsedFunction<dim> *darcy_bc       = new Functions::ParsedFunction<dim>(1);
     Functions::ParsedFunction<dim> *darcy_rhs      = new Functions::ParsedFunction<dim>(1);
     Functions::ParsedFunction<dim> *elasticity_bc  = new Functions::ParsedFunction<dim>(dim);
@@ -567,8 +549,8 @@ namespace biot
   void MixedBiotProblem<dim>::assemble_rhs ()
   {
     Functions::ParsedFunction<dim> *k_inv = new Functions::ParsedFunction<dim>(dim*dim);
-    Functions::ParsedFunction<dim> *mu                  = new Functions::ParsedFunction<dim>(1);
-    Functions::ParsedFunction<dim> *lambda              = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *mu             = new Functions::ParsedFunction<dim>(1);
+    Functions::ParsedFunction<dim> *lambda         = new Functions::ParsedFunction<dim>(1);
     Functions::ParsedFunction<dim> *darcy_bc       = new Functions::ParsedFunction<dim>(1);
     Functions::ParsedFunction<dim> *darcy_rhs      = new Functions::ParsedFunction<dim>(1);
     Functions::ParsedFunction<dim> *elasticity_bc  = new Functions::ParsedFunction<dim>(dim);
@@ -626,7 +608,6 @@ namespace biot
     delete elasticity_bc;
     delete elasticity_rhs;
   }
-
 
 
   // MixedBiotProblem: Solve

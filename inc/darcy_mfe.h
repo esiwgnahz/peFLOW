@@ -21,6 +21,7 @@
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
 
+#include "../inc/problem.h"
 #include "../inc/utilities.h"
 #include "../inc/darcy_data.h"
 
@@ -30,11 +31,12 @@ namespace darcy
   using namespace dealii;
 
   template <int dim>
-  class MixedDarcyProblem
+  class MixedDarcyProblem : public Problem<dim>
   {
   public:
-    MixedDarcyProblem(const unsigned int degree, ParameterHandler &);
-    void run(const unsigned int refine, const unsigned int grid = 0);
+    MixedDarcyProblem(const unsigned int degree,
+                      ParameterHandler &);
+    void run(const unsigned int refine, const unsigned int grid);
   private:
     ParameterHandler &prm;
 

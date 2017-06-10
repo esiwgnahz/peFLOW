@@ -84,6 +84,7 @@ namespace elasticity
         values(12) = exact_solution_val_data.value(p,12);
         values(13) = exact_solution_val_data.value(p,13);
         values(14) = exact_solution_val_data.value(p,14);
+        break;
       default:
         Assert(false, ExcNotImplemented());
       }
@@ -105,19 +106,19 @@ namespace elasticity
         //sigma 11
         tmp[0] = exact_solution_grad_val_data.value(p,0);
         tmp[1] = exact_solution_grad_val_data.value(p,1);
-        grads[1] = tmp;
+        grads[0] = tmp;
         //sigma 12
         tmp[0] = exact_solution_grad_val_data.value(p,2);
         tmp[1] = exact_solution_grad_val_data.value(p,3);
-        grads[2] = tmp;
+        grads[1] = tmp;
         //sigma 21
         tmp[0] = exact_solution_grad_val_data.value(p,4);
         tmp[1] = exact_solution_grad_val_data.value(p,5);
-        grads[3] = tmp;
+        grads[2] = tmp;
         // sigma 22
         tmp[0] = exact_solution_grad_val_data.value(p,6);
         tmp[1] = exact_solution_grad_val_data.value(p,7);
-        grads[4] = tmp;
+        grads[3] = tmp;
         // Rest (not used)
         tmp[0] = 0.0;
         tmp[1] = 0.0;
