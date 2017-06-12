@@ -18,7 +18,11 @@
 #include "../inc/elasticity_msmfe.h"
 
 
-// Main function
+/*
+ * Main driver function. Chooses the model and dimension.
+ * Then reads parameters from the file. The parameter files
+ * should be in the same directory as CMakeLists.txt.
+ */
 int main()
 {
   try {
@@ -54,7 +58,7 @@ int main()
     if(model == 1)
     {
       DarcyParameterReader   param(prm);
-      param.read_parameters("parameters_darcy.prm");
+      param.read_parameters("../parameters_darcy.prm");
 
       // Get parameters
       const unsigned int degree = prm.get_integer("degree");
@@ -80,7 +84,7 @@ int main()
     else if(model == 2)
     {
       DarcyParameterReader   param(prm);
-      param.read_parameters("parameters_darcy.prm");
+      param.read_parameters("../parameters_darcy.prm");
 
       // Get parameters
       const unsigned int degree = prm.get_integer("degree");
@@ -106,7 +110,7 @@ int main()
     else if(model == 3)
     {
       ElasticityParameterReader   param(prm);
-      param.read_parameters("parameters_elasticity.prm");
+      param.read_parameters("../parameters_elasticity.prm");
 
       // Get parameters
       const unsigned int degree = prm.get_integer("degree");
@@ -132,7 +136,7 @@ int main()
     else if(model == 4)
     {
       ElasticityParameterReader   param(prm);
-      param.read_parameters("parameters_elasticity.prm");
+      param.read_parameters("../parameters_elasticity.prm");
 
       // Get parameters
       const unsigned int degree = prm.get_integer("degree");
@@ -158,7 +162,7 @@ int main()
     else if(model == 5)
     {
       BiotParameterReader param(prm);
-      param.read_parameters("parameters_biot.prm");
+      param.read_parameters("../parameters_biot.prm");
 
       // Get parameters
       const unsigned int degree = prm.get_integer("degree");
@@ -177,7 +181,7 @@ int main()
         case 3:
           std::cout << "Mixed Biot, 3D case: " << std::endl;
           Assert(false, ExcNotImplemented());
-          problem3d = new MixedBiotProblemProblem<3>(degree, prm);
+          problem3d = new MixedBiotProblem<3>(degree, prm, time_step, num_time_steps);
           problem3d->run(refinements, grid);
           break;
         default:
@@ -185,8 +189,16 @@ int main()
       }
     }
 
-    delete problem2d;
-    delete problem3d;
+    switch (dim)
+    {
+      case 2:
+        delete problem2d;
+        break;
+      case 3:
+        delete problem3d;
+        break;
+    }
+
   } catch (std::exception &exc) {
     std::cerr << std::endl << std:: endl
               << "----------------------------------------------------"

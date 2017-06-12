@@ -126,6 +126,9 @@ namespace elasticity
      */
     const unsigned int degree;
     const int          total_dim;
+    Triangulation<dim> triangulation;
+    FESystem<dim>      fe;
+    DoFHandler<dim>    dof_handler;
 
     BlockSparsityPattern      sparsity_pattern;
     BlockSparseMatrix<double> system_matrix;
