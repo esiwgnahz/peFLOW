@@ -1,2 +1,2 @@
 # peFLOW
-A collection of methods to solve problems arising in flow in poroelastic medium.
+A collection of methods for flow in poroelastic medium.
