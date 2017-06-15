@@ -108,7 +108,7 @@ class DarcyParameterReader : public Subscriptor
   inline void DarcyParameterReader::read_parameters (const std::string parameter_file)
   {
     declare_parameters();
-    prm.read_input (parameter_file);
+    prm.parse_input (parameter_file);
   }
 }
 
