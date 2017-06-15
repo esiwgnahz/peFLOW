@@ -122,7 +122,7 @@ class ElasticityParameterReader : public Subscriptor
   inline void ElasticityParameterReader::read_parameters (const std::string parameter_file)
   {
     declare_parameters();
-    prm.read_input (parameter_file);
+    prm.parse_input (parameter_file);
   }
 }
 
