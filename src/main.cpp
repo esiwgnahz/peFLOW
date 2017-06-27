@@ -52,8 +52,8 @@ int main()
     std::cin >> dim;
 
     ParameterHandler prm;
-    Problem<2> *problem2d;
-    Problem<3> *problem3d;
+    Problem<2> *problem2d = nullptr;
+    Problem<3> *problem3d = nullptr;
 
     if(model == 1)
     {

@@ -15,6 +15,7 @@ template <int dim>
 class Problem
 {
 public:
+  virtual ~Problem() {};
   virtual void run (const unsigned int refine, const unsigned int grid) = 0;
 };
 

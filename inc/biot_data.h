@@ -42,10 +42,10 @@ namespace biot
   ExactSolution<dim>::ExactSolution(const double cur_time, ParameterHandler &param)
     :
       Function<dim>(dim+1+dim*dim + dim + (3-dim)*(dim-1) + (dim-2)*dim),
+      current_time(cur_time),
       prm(param),
       exact_solution_val_data(dim+1+dim*dim + dim + (3-dim)*(dim-1) + (dim-2)*dim),
-      exact_solution_grad_val_data( dim*(dim+1+dim*dim + dim + (3-dim)*(dim-1) + (dim-2)*dim)),
-      current_time(cur_time)
+      exact_solution_grad_val_data( dim*(dim+1+dim*dim + dim + (3-dim)*(dim-1) + (dim-2)*dim))
   {}
 
   template <int dim>
@@ -245,8 +245,8 @@ namespace biot
   KInverse<dim>::KInverse(ParameterHandler &param, const Functions::ParsedFunction<dim> *k_inv_data)
     :
       TensorFunction<2,dim>(),
-      prm(param),
-      k_inv_data(k_inv_data)
+      k_inv_data(k_inv_data),
+      prm(param)
   {}
 
   template <int dim>
@@ -313,9 +313,9 @@ namespace biot
                                           const Functions::ParsedFunction<dim> *lambda_data)
     :
       Function<dim>(dim),
-      prm(param),
       mu(mu_data),
-      lambda(lambda_data)
+      lambda(lambda_data),
+      prm(param)
   {}
  
 }

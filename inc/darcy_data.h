@@ -140,8 +140,8 @@ namespace darcy
   KInverse<dim>::KInverse(ParameterHandler &param, const Functions::ParsedFunction<dim> *k_inv_data)
     :
       TensorFunction<2,dim>(),
-      prm(param),
-      k_inv_data(k_inv_data)
+      k_inv_data(k_inv_data),
+      prm(param)
   {}
 
   template <int dim>

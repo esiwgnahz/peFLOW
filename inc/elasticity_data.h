@@ -201,13 +201,14 @@ namespace elasticity
 
 
   template <int dim>
-  LameCoefficients<dim>::LameCoefficients(ParameterHandler &param, const Functions::ParsedFunction<dim> *mu_data,
+  LameCoefficients<dim>::LameCoefficients(ParameterHandler &param,
+                                          const Functions::ParsedFunction<dim> *mu_data,
                                           const Functions::ParsedFunction<dim> *lambda_data)
     :
       Function<dim>(dim),
-      prm(param),
       mu(mu_data),
-      lambda(lambda_data)
+      lambda(lambda_data),
+      prm(param)
   {} 
   
 

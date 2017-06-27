@@ -42,8 +42,8 @@ namespace darcy
     template <int dim>
     MixedDarcyProblem<dim>::MixedDarcyProblem (const unsigned int degree, ParameterHandler &param)
             :
-            degree(degree),
             prm(param),
+            degree(degree),
             fe(FE_RaviartThomas<dim>(degree-1), 1, 
                FE_DGQ<dim>(degree-1), 1), 
             dof_handler(triangulation),

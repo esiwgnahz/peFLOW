@@ -44,8 +44,8 @@ namespace darcy
   template <int dim>
   MultipointMixedDarcyProblem<dim>::MultipointMixedDarcyProblem (const unsigned int degree, ParameterHandler &param)
           :
-          degree(degree),
           prm(param),
+          degree(degree),
           fe(FE_RT_Bubbles<dim>(degree), 1,
              FE_DGQ<dim>(degree-1), 1),
           dof_handler(triangulation),
@@ -86,10 +86,10 @@ namespace darcy
                           f_quad,
                           update_values     | update_quadrature_points   |
                           update_JxW_values | update_normal_vectors),
-          num_cells(tria.n_active_cells()),
           K_inv(k_data),
           bc(bc),
-          rhs(rhs)
+          rhs(rhs),
+          num_cells(tria.n_active_cells())
   {
     n_faces_at_vertex.resize(tria.n_vertices(), 0);
     typename Triangulation<dim>::active_face_iterator face = tria.begin_active_face(), endf = tria.end_face();
@@ -112,10 +112,10 @@ namespace darcy
                           update_values     | update_quadrature_points   |
                           update_JxW_values | update_normal_vectors),
           n_faces_at_vertex(scratch_data.n_faces_at_vertex),
-          num_cells(scratch_data.num_cells),
           K_inv(scratch_data.K_inv),
           bc(scratch_data.bc),
-          rhs(scratch_data.rhs)
+          rhs(scratch_data.rhs),
+          num_cells(scratch_data.num_cells)
   {}
 
 

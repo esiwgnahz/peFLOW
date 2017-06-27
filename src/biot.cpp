@@ -47,14 +47,12 @@ namespace biot
 
   // MixedBiotProblem: class constructor
   template <int dim>
-  MixedBiotProblem<dim>::MixedBiotProblem (const unsigned int degree, ParameterHandler &param, const double time_step,
+  MixedBiotProblem<dim>::MixedBiotProblem (const unsigned int degree, ParameterHandler &param,
+                                           const double time_step,
                                            const unsigned int num_time_steps)
     :
-      degree(degree),
       prm(param),
-      time(0.0),
-      time_step(time_step),
-      num_time_steps(num_time_steps),
+      total_dim(dim + 1 + dim*dim + dim + static_cast<int>(dim*(dim-1)/2)),
       l2_l2_norms   (5, 0.0),
       l2_l2_errors  (5, 0.0),
       linf_l2_norms (5, 0.0),
@@ -67,6 +65,10 @@ namespace biot
       pressure_disp_l2_midcell_errors  (2, 0.0),
       pressure_disp_linf_midcell_norms (2, 0.0),
       pressure_disp_linf_midcell_errors(2, 0.0),
+      degree(degree),
+      time(0.0),
+      time_step(time_step),
+      num_time_steps(num_time_steps),
       fe(FE_RT_Bubbles<dim>(degree+1), 1,
          FE_DGQ<dim>(degree), 1,
          FE_RT_Bubbles<dim>(degree+1), dim,
@@ -1018,14 +1020,14 @@ namespace biot
         convergence_table.set_tex_caption("Velocity,L2,Hdiv", "$ \\|\\nabla\\cdot(\\u - \\u_h)\\|_{L^2(L^2)} $");
         convergence_table.set_tex_caption("Pressure,L2,L2", "$ \\|p - p_h\\|_{L^2(L^2)} $");
         convergence_table.set_tex_caption("Pressure,L2,L2mid", "$ \\|Qp - p_h\\|_{L^2(L^2)} $");
-        convergence_table.set_tex_caption("Pressure,Linf,L2", "$ \\|p - p_h\\|_{L^{\infty}(L^2)} $");
-        convergence_table.set_tex_caption("Pressure,Linf,L2mid", "$ \\|Qp - p_h\\|_{L^{\infty}(L^2)} $");
-        convergence_table.set_tex_caption("Stress,Linf,L2", "$ \\|\\sigma - \\sigma_h\\|_{L^{\infty}(L^2)} $");
-        convergence_table.set_tex_caption("Stress,Linf,Hdiv", "$ \\|\\nabla\\cdot(\\sigma - \\sigma_h)\\|_{L^{\infty}(L^2)} $");
-        convergence_table.set_tex_caption("Displ,Linf,L2", "$ \\|\\bbeta - \\bbeta_h\\|_{L^{\infty}(L^2)} $");
-        convergence_table.set_tex_caption("Displ,Linf,L2mid", "$ \\|Q\\bbeta - \\bbeta_h\\|_{L^{\infty}(L^2)} $");
+        convergence_table.set_tex_caption("Pressure,Linf,L2", "$ \\|p - p_h\\|_{L^{\\infty}(L^2)} $");
+        convergence_table.set_tex_caption("Pressure,Linf,L2mid", "$ \\|Qp - p_h\\|_{L^{\\infty}(L^2)} $");
+        convergence_table.set_tex_caption("Stress,Linf,L2", "$ \\|\\sigma - \\sigma_h\\|_{L^{\\infty}(L^2)} $");
+        convergence_table.set_tex_caption("Stress,Linf,Hdiv", "$ \\|\\nabla\\cdot(\\sigma - \\sigma_h)\\|_{L^{\\infty}(L^2)} $");
+        convergence_table.set_tex_caption("Displ,Linf,L2", "$ \\|\\bbeta - \\bbeta_h\\|_{L^{\\infty}(L^2)} $");
+        convergence_table.set_tex_caption("Displ,Linf,L2mid", "$ \\|Q\\bbeta - \\bbeta_h\\|_{L^{\\infty}(L^2)} $");
         convergence_table.set_tex_caption("Displ,L2,L2mid", "$ \\|Q\\bbeta - \\bbeta_h\\|_{L^2(L^2)} $");
-        convergence_table.set_tex_caption("Rotat,Linf,L2", "$ \\|r - r_h\\|_{L^{\infty}(L^2)} $");
+        convergence_table.set_tex_caption("Rotat,Linf,L2", "$ \\|r - r_h\\|_{L^{\\infty}(L^2)} $");
         convergence_table.set_tex_format("cells", "r");
         convergence_table.set_tex_format("dofs", "r");
 

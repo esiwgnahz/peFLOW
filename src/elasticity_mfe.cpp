@@ -40,8 +40,8 @@ namespace elasticity
   template <int dim>
   MixedElasticityProblem<dim>::MixedElasticityProblem (const unsigned int deg, ParameterHandler &param)
           :
-          degree(deg),
           prm(param),
+          degree(deg),
           total_dim(dim*dim + dim + static_cast<int>(0.5*dim*(dim-1))),
           fe(FE_BDM<dim>(deg), dim,
              FE_DGP<dim>(deg-1), dim,

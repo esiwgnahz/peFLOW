@@ -43,8 +43,8 @@ namespace elasticity
   template <int dim>
   MultipointMixedElasticityProblem<dim>::MultipointMixedElasticityProblem (const unsigned int degree, ParameterHandler &param)
     :
-      degree(degree),
       prm(param),
+      degree(degree),
       total_dim(dim*dim + dim + static_cast<int>(0.5*dim*(dim-1))),
       fe(FE_RT_Bubbles<dim>(degree), dim,
          FE_DGQ<dim>(degree-1), dim,
@@ -91,10 +91,10 @@ namespace elasticity
                       f_quad,
                       update_values     | update_quadrature_points   |
                       update_JxW_values | update_normal_vectors),
-      num_cells(tria.n_active_cells()),
       lame(lame_data),
       bc(bc),
-      rhs(rhs)
+      rhs(rhs),
+      num_cells(tria.n_active_cells())
   {
     n_faces_at_vertex.resize(tria.n_vertices(), 0);
     typename Triangulation<dim>::active_face_iterator face = tria.begin_active_face(), endf = tria.end_face();
@@ -117,10 +117,10 @@ namespace elasticity
                       update_values     | update_quadrature_points   |
                       update_JxW_values | update_normal_vectors),
       n_faces_at_vertex(scratch_data.n_faces_at_vertex),
-      num_cells(scratch_data.num_cells),
       lame(scratch_data.lame),
       bc(scratch_data.bc),
-      rhs(scratch_data.rhs)
+      rhs(scratch_data.rhs),
+      num_cells(scratch_data.num_cells)
   {}
 
 
@@ -191,7 +191,6 @@ namespace elasticity
       }
 
     unsigned int n_stress = dim*dim*pow(degree+1,dim);
-    unsigned int n_rotation = rotation_dim*pow(degree+1,dim);
     std::unordered_map<unsigned int, std::unordered_map<unsigned int, double>> div_map;
 
     std::vector<Tensor<1,dim>> div_phi_i_s(dofs_per_cell);
@@ -259,7 +258,6 @@ namespace elasticity
 
         for (unsigned int i=0; i<dofs_per_cell; ++i)
           {
-            bool rotation_flag = false;
             Point<dim> point = scratch_data.fe_values.get_quadrature_points()[q];
             const double mu = scratch_data.lame.mu_value(point);
             const double lambda = scratch_data.lame.lambda_value(point);
@@ -280,9 +278,6 @@ namespace elasticity
                     stress_indices.insert(i);
                     copy_data.local_stress_indices[p].insert(copy_data.local_dof_indices[j]);
                   }
-
-                if (fabs(scalar_product(phi_i_p[i], phi_i_p[i])) > 1.e-12)
-                  rotation_flag = true;
 
                 if (fabs(sr_term) > 1.e-12 && copy_data.local_dof_indices[i] > n_s)
                   {
